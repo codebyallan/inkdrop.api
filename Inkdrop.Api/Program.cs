@@ -1,4 +1,5 @@
 using Inkdrop.Api.Data;
+using Inkdrop.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ var connectionString = builder.Configuration.GetSection("DbConfig:ConnectionStri
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+builder.Services.AddScoped<LocationService>();
 
 var app = builder.Build();
 
