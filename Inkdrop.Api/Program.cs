@@ -13,6 +13,7 @@ var connectionString = builder.Configuration.GetSection("DbConfig:ConnectionStri
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<LocationService>();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -22,4 +23,5 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.MapControllers();
 app.Run();
