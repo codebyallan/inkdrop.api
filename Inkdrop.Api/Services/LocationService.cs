@@ -28,6 +28,7 @@ public class LocationService(ApplicationDbContext dbContext)
     {
         Location? location = await dbContext.Locations.FindAsync(id);
         if (location is null) return false;
+        if (await dbContext.Printers.AnyAsync(p => p.LocationId == id)) throw new InvalidOperationException("Cannot delete location because it is associated with existing printers.");
         location.MarkAsDeleted();
         await dbContext.SaveChangesAsync();
         return true;

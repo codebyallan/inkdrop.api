@@ -13,6 +13,7 @@ var connectionString = builder.Configuration.GetSection("DbConfig:ConnectionStri
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<LocationService>();
+builder.Services.AddScoped<PrinterService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
