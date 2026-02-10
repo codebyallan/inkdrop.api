@@ -14,6 +14,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<PrinterService>();
+builder.Services.AddScoped<TonerService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
