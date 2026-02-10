@@ -1,6 +1,5 @@
 using Inkdrop.Api.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Inkdrop.Api.Data;
 
@@ -9,6 +8,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Printer> Printers => Set<Printer>();
     public DbSet<Toner> Toners => Set<Toner>();
+    public DbSet<Movements> Movements => Set<Movements>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Location>(entity =>
@@ -77,6 +77,32 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             toner.Property(l => l.DeletedAt)
                 .HasColumnType("timestamp with time zone");
             toner.HasQueryFilter(l => l.DeletedAt == null);
+        }
+        );
+        modelBuilder.Entity<Movements>(movement =>
+        {
+            movement.HasKey(l => l.Id);
+            movement.Property(l => l.Quantity)
+                .IsRequired();
+            movement.Property(l => l.Description)
+                .HasMaxLength(100)
+                .IsRequired(false);
+            movement.Property(l => l.Type)
+                .HasMaxLength(50)
+                .IsRequired();
+            movement.HasOne<Toner>()
+                .WithMany()
+                .HasForeignKey(m => m.TonerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            movement.HasOne<Printer>()
+                .WithMany()
+                .HasForeignKey(m => m.PrinterId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+            movement.Property(l => l.CreatedAt)
+                .HasColumnType("timestamp with time zone");
+            movement.Property(l => l.UpdatedAt)
+                .HasColumnType("timestamp with time zone");
         }
         );
     }
