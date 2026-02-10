@@ -1,15 +1,11 @@
 namespace Inkdrop.Api.Entities;
 
-public class Toner
+public class Toner : Base
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
     public string Model { get; private set; } = string.Empty;
     public string Manufacturer { get; private set; } = string.Empty;
     public string Color { get; init; } = string.Empty;
     public int Quantity { get; private set; } = 0;
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; private set; } = null;
-    public DateTime? DeletedAt { get; private set; } = null;
     private Toner() { }
     public Toner(string model, string manufacturer, string color)
     {
@@ -44,11 +40,6 @@ public class Toner
         if (quantity <= 0) throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
         Quantity += quantity;
         UpdatedAt = DateTime.UtcNow;
-    }
-    public void MarkAsDeleted()
-    {
-        if (DeletedAt != null) return;
-        DeletedAt = DateTime.UtcNow;
     }
     private static void ValidateModel(string model)
     {

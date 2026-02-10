@@ -1,13 +1,9 @@
 namespace Inkdrop.Api.Entities;
 
-public class Location
+public class Location : Base
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; } = null;
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; private set; } = null;
-    public DateTime? DeletedAt { get; private set; } = null;
     private Location() { }
     public Location(string name, string? description = null)
     {
@@ -21,11 +17,6 @@ public class Location
         Name = name;
         Description = description;
         UpdatedAt = DateTime.UtcNow;
-    }
-    public void MarkAsDeleted()
-    {
-        if (DeletedAt != null) return;
-        DeletedAt = DateTime.UtcNow;
     }
     private static void Validate(string name)
     {

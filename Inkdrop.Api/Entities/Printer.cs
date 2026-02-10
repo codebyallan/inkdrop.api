@@ -1,17 +1,13 @@
 namespace Inkdrop.Api.Entities;
 
-public class Printer
+public class Printer : Base
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; private set; } = string.Empty;
     public string Model { get; private set; } = string.Empty;
     public string Manufacturer { get; private set; } = string.Empty;
     public string IpAddress { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
     public Guid LocationId { get; private set; }
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; private set; } = null;
-    public DateTime? DeletedAt { get; private set; } = null;
     private Printer() { }
     public Printer(string name, string model, string manufacturer, string ipAddress, Guid locationId)
     {
@@ -63,7 +59,7 @@ public class Printer
         IsActive = isActive;
         UpdatedAt = DateTime.UtcNow;
     }
-    public void MarkAsDeleted()
+    public override void MarkAsDeleted()
     {
         if (DeletedAt != null) return;
         IsActive = false;
