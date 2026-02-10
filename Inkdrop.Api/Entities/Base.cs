@@ -5,11 +5,5 @@ public abstract class Base
     public Guid Id { get; init; } = Guid.NewGuid();
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; protected set; } = null;
-    public DateTime? DeletedAt { get; protected set; } = null;
     protected Base() { }
-    public virtual void MarkAsDeleted()
-    {
-        if (DeletedAt != null) return;
-        DeletedAt = DateTime.UtcNow;
-    }
 }

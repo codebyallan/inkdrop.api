@@ -1,6 +1,8 @@
+using Inkdrop.Api.Interfaces;
+
 namespace Inkdrop.Api.Entities;
 
-public class Printer : Base
+public class Printer : Base, ISoftDeletable
 {
     public string Name { get; private set; } = string.Empty;
     public string Model { get; private set; } = string.Empty;
@@ -8,6 +10,7 @@ public class Printer : Base
     public string IpAddress { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
     public Guid LocationId { get; private set; }
+    public DateTime? DeletedAt { get; private set; } = null;
     private Printer() { }
     public Printer(string name, string model, string manufacturer, string ipAddress, Guid locationId)
     {
@@ -59,7 +62,7 @@ public class Printer : Base
         IsActive = isActive;
         UpdatedAt = DateTime.UtcNow;
     }
-    public override void MarkAsDeleted()
+    public void MarkAsDeleted()
     {
         if (DeletedAt != null) return;
         IsActive = false;
