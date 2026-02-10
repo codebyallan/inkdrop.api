@@ -8,6 +8,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Printer> Printers => Set<Printer>();
+    public DbSet<Toner> Toners => Set<Toner>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Location>(entity =>
@@ -53,6 +54,29 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             printer.Property(l => l.DeletedAt)
                 .HasColumnType("timestamp with time zone");
             printer.HasQueryFilter(l => l.DeletedAt == null);
+        }
+        );
+        modelBuilder.Entity<Toner>(toner =>
+        {
+            toner.HasKey(l => l.Id);
+            toner.Property(l => l.Model)
+                .HasMaxLength(100)
+                .IsRequired();
+            toner.Property(l => l.Manufacturer)
+                .HasMaxLength(100)
+                .IsRequired();
+            toner.Property(l => l.Quantity)
+                .HasDefaultValue(0);
+            toner.Property(l => l.Color)
+                .HasMaxLength(50)
+                .IsRequired();
+            toner.Property(l => l.CreatedAt)
+                .HasColumnType("timestamp with time zone");
+            toner.Property(l => l.UpdatedAt)
+                .HasColumnType("timestamp with time zone");
+            toner.Property(l => l.DeletedAt)
+                .HasColumnType("timestamp with time zone");
+            toner.HasQueryFilter(l => l.DeletedAt == null);
         }
         );
     }
