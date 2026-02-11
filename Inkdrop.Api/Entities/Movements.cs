@@ -12,10 +12,10 @@ namespace Inkdrop.Api.Entities
         {
             Validate(tonerId, printerId, quantity, description, type);
             TonerId = tonerId;
+            Type = type.ToUpper();
             PrinterId = Type == "OUT" ? printerId : null;
             Quantity = quantity;
             Description = description;
-            Type = type.ToUpper();
         }
         private static void Validate(Guid tonerId, Guid? printerId, int quantity, string? description, string type)
         {
