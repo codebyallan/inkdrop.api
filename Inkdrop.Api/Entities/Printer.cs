@@ -2,7 +2,7 @@ using Inkdrop.Api.Interfaces;
 
 namespace Inkdrop.Api.Entities;
 
-public class Printer : Base, ISoftDeletable
+public class Printer : Base, ISoftDeletable, IUpdatable
 {
     public string Name { get; private set; } = string.Empty;
     public string Model { get; private set; } = string.Empty;
@@ -10,6 +10,7 @@ public class Printer : Base, ISoftDeletable
     public string IpAddress { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
     public Guid LocationId { get; private set; }
+    public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     private Printer() { }
     public Printer(string name, string model, string manufacturer, string ipAddress, Guid locationId)

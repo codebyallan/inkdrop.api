@@ -101,8 +101,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .IsRequired(false);
             movement.Property(l => l.CreatedAt)
                 .HasColumnType("timestamp with time zone");
-            movement.Property(l => l.UpdatedAt)
-                .HasColumnType("timestamp with time zone");
         }
         );
     }
