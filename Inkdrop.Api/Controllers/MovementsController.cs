@@ -12,7 +12,8 @@ public class MovementsController(MovementsService movementsService) : Controller
     [HttpPost]
     public async Task<ActionResult<MovementsResponse>> CreateMovements([FromBody] CreateMovementRequest request)
     {
-        MovementsResponse movement = await movementsService.CreateAsync(request);
+        MovementsResponse? movement = await movementsService.CreateAsync(request);
+        if (movement == null) return BadRequest();
         return CreatedAtAction(nameof(GetMovementsById), new { id = movement.Id }, movement);
     }
 

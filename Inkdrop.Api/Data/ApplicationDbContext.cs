@@ -103,6 +103,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
         }
         );
+        
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(Inkdrop.Api.Notifications.Notifiable).IsAssignableFrom(entityType.ClrType))
+            {
+                modelBuilder.Entity(entityType.ClrType).Ignore("Notifications");
+                modelBuilder.Entity(entityType.ClrType).Ignore("IsValid");
+            }
+        }
     }
 
 }

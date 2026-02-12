@@ -12,7 +12,8 @@ public class TonerController(TonerService tonerService) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TonerResponse>> CreateToner([FromBody] CreateTonerRequest request)
     {
-        TonerResponse toner = await tonerService.CreateTonerAsync(request);
+        TonerResponse? toner = await tonerService.CreateTonerAsync(request);
+        if (toner == null) return BadRequest();
         return CreatedAtAction(nameof(GetTonerById), new { id = toner.Id }, toner);
     }
     [HttpGet]

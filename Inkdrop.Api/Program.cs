@@ -1,4 +1,6 @@
 using Inkdrop.Api.Data;
+using Inkdrop.Api.Filters;
+using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +18,13 @@ builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<PrinterService>();
 builder.Services.AddScoped<TonerService>();
 builder.Services.AddScoped<MovementsService>();
-builder.Services.AddControllers();
+builder.Services.AddScoped<NotificationContext>();
+builder.Services.AddControllers(options =>
+    options.Filters.Add<NotificationFilter>())
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.SuppressModelStateInvalidFilter = true;
+    });
 
 var app = builder.Build();
 

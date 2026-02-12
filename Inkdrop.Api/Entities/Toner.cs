@@ -22,6 +22,7 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     {
         if (Model == model) return;
         ValidateModel(model);
+        if (!IsValid) return;
         Model = model;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -29,19 +30,22 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     {
         if (Manufacturer == manufacturer) return;
         ValidateManufacturer(manufacturer);
+        if (!IsValid) return;
         Manufacturer = manufacturer;
         UpdatedAt = DateTime.UtcNow;
     }
     public void Out(int quantity)
     {
-        if (quantity <= 0) throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
-        if (quantity > Quantity) throw new InvalidOperationException("Not enough toner in stock.");
+        if (quantity <= 0) AddNotification("TonerQuantityInvalid", "Quantity must be greater than zero.");
+        if (quantity > Quantity) AddNotification("TonerInsufficientStock", "Not enough toner in stock.");
+        if (!IsValid) return;
         Quantity -= quantity;
         UpdatedAt = DateTime.UtcNow;
     }
     public void In(int quantity)
     {
-        if (quantity <= 0) throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        if (quantity <= 0) AddNotification("TonerQuantityInvalid", "Quantity must be greater than zero.");
+        if (!IsValid) return;
         Quantity += quantity;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -50,22 +54,34 @@ public class Toner : Base, ISoftDeletable, IUpdatable
         if (DeletedAt != null) return;
         DeletedAt = DateTime.UtcNow;
     }
-    private static void ValidateModel(string model)
+    private void ValidateModel(string model)
     {
-        if (string.IsNullOrWhiteSpace(model)) throw new ArgumentException("Toner model cannot be null or empty.", nameof(model));
-        if (model.Length < 3 || model.Length > 100) throw new ArgumentException("Toner model must be between 3 and 100 characters.", nameof(model));
+        if (string.IsNullOrWhiteSpace(model))
+        {
+            AddNotification("TonerModelInvalid", "Toner model cannot be null or empty.");
+            return;
+        }
+        if (model.Length < 3 || model.Length > 100) AddNotification("TonerModelLengthInvalid", "Toner model must be between 3 and 100 characters.");
     }
-    private static void ValidateManufacturer(string manufacturer)
+    private void ValidateManufacturer(string manufacturer)
     {
-        if (string.IsNullOrWhiteSpace(manufacturer)) throw new ArgumentException("Toner manufacturer cannot be null or empty.", nameof(manufacturer));
-        if (manufacturer.Length < 2 || manufacturer.Length > 100) throw new ArgumentException("Toner manufacturer must be between 2 and 100 characters.", nameof(manufacturer));
+        if (string.IsNullOrWhiteSpace(manufacturer))
+        {
+            AddNotification("TonerManufacturerInvalid", "Toner manufacturer cannot be null or empty.");
+            return;
+        }
+        if (manufacturer.Length < 2 || manufacturer.Length > 100) AddNotification("TonerManufacturerLengthInvalid", "Toner manufacturer must be between 2 and 100 characters.");
     }
-    private static void ValidateColor(string color)
+    private void ValidateColor(string color)
     {
-        if (string.IsNullOrWhiteSpace(color)) throw new ArgumentException("Toner color cannot be null or empty.", nameof(color));
-        if (color.Length < 3 || color.Length > 50) throw new ArgumentException("Toner color must be between 3 and 50 characters.", nameof(color));
+        if (string.IsNullOrWhiteSpace(color))
+        {
+            AddNotification("TonerColorInvalid", "Toner color cannot be null or empty.");
+            return;
+        }
+        if (color.Length < 3 || color.Length > 50) AddNotification("TonerColorLengthInvalid", "Toner color must be between 3 and 50 characters.");
     }
-    private static void Validate(string model, string manufacturer, string color)
+    private void Validate(string model, string manufacturer, string color)
     {
         ValidateModel(model);
         ValidateManufacturer(manufacturer);

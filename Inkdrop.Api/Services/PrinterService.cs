@@ -2,17 +2,24 @@ using Inkdrop.Api.Data;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
+using Inkdrop.Api.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services
 {
-    public class PrinterService(ApplicationDbContext dbContext)
+    public class PrinterService(ApplicationDbContext dbContext, NotificationContext notificationContext)
     {
-        public async Task<PrinterResponse> CreatePrinterAsync(CreatePrinterRequest createPrinterRequest)
+        public async Task<PrinterResponse?> CreatePrinterAsync(CreatePrinterRequest createPrinterRequest)
         {
             bool locationExists = await dbContext.Locations.AnyAsync(l => l.Id == createPrinterRequest.LocationId);
-            if (!locationExists) throw new ArgumentException($"Location {createPrinterRequest.LocationId} not found.");
+            if (!locationExists) notificationContext.AddNotification("LocationId", "Not found");
+            if (!notificationContext.IsValid) return null;
             Printer printer = new(createPrinterRequest.Name, createPrinterRequest.Model, createPrinterRequest.Manufacturer, createPrinterRequest.IpAddress, createPrinterRequest.LocationId);
+            if (!printer.IsValid)
+            {
+                notificationContext.AddNotifications(printer);
+                return null;
+            }
             dbContext.Printers.Add(printer);
             await dbContext.SaveChangesAsync();
             return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.CreatedAt);
@@ -31,8 +38,13 @@ namespace Inkdrop.Api.Services
             if (updatePrinterRequest.LocationId.HasValue)
             {
                 bool locationExists = await dbContext.Locations.AnyAsync(l => l.Id == updatePrinterRequest.LocationId.Value);
-                if (!locationExists) throw new ArgumentException($"Location with ID {updatePrinterRequest.LocationId.Value} does not exist.", nameof(updatePrinterRequest.LocationId));
-                printer.UpdateLocationId(updatePrinterRequest.LocationId.Value);
+                if (!locationExists) notificationContext.AddNotification("LocationId", "Not found");
+                else printer.UpdateLocationId(updatePrinterRequest.LocationId.Value);
+            }
+            if (!printer.IsValid)
+            {
+                notificationContext.AddNotifications(printer.Notifications);
+                return null;
             }
             await dbContext.SaveChangesAsync();
             return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.CreatedAt);

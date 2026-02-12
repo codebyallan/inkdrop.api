@@ -12,7 +12,8 @@ public class PrinterController(PrinterService printerService) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<PrinterResponse>> CreatePrinter(CreatePrinterRequest request)
     {
-        PrinterResponse createdPrinter = await printerService.CreatePrinterAsync(request);
+        PrinterResponse? createdPrinter = await printerService.CreatePrinterAsync(request);
+        if (createdPrinter == null) return BadRequest();
         return CreatedAtAction(nameof(GetPrinterById), new { id = createdPrinter.Id }, createdPrinter);
     }
     [HttpGet]

@@ -18,6 +18,7 @@ public class Location : Base, ISoftDeletable, IUpdatable
     public void Update(string name, string? description = null)
     {
         Validate(name);
+        if (!IsValid) return;
         Name = name;
         Description = description;
         UpdatedAt = DateTime.UtcNow;
@@ -27,11 +28,14 @@ public class Location : Base, ISoftDeletable, IUpdatable
         if (DeletedAt != null) return;
         DeletedAt = DateTime.UtcNow;
     }
-    private static void Validate(string name)
+    private void Validate(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Location name cannot be null or empty.", nameof(name));
+        {
+            AddNotification("LocationNameInvalid", "Location name cannot be null or empty.");
+            return;
+        }
         if (name.Length > 100 || name.Length < 3)
-            throw new ArgumentException("Location name must be between 3 and 100 characters.", nameof(name));
+            AddNotification("LocationNameLengthInvalid", "Location name must be between 3 and 100 characters.");
     }
 }

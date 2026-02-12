@@ -17,16 +17,20 @@ namespace Inkdrop.Api.Entities
             Quantity = quantity;
             Description = description;
         }
-        private static void Validate(Guid tonerId, Guid? printerId, int quantity, string? description, string type)
+        private void Validate(Guid tonerId, Guid? printerId, int quantity, string? description, string type)
         {
-            if (tonerId == Guid.Empty) throw new ArgumentException("TonerId cannot be empty.");
-            if (printerId.HasValue && printerId.Value == Guid.Empty) throw new ArgumentException("PrinterId cannot be empty if provided.");
-            if (description != null && (description.Length < 5 || description.Length > 100)) throw new ArgumentException("Description must be between 5 and 100 characters.");
-            if (quantity <= 0) throw new ArgumentException("Quantity must be greater than zero.");
-            if (string.IsNullOrWhiteSpace(type)) throw new ArgumentException("Type cannot be empty.");
+            if (tonerId == Guid.Empty) AddNotification("MovementsTonerIdInvalid", "TonerId cannot be empty.");
+            if (printerId.HasValue && printerId.Value == Guid.Empty) AddNotification("MovementsPrinterIdInvalid", "PrinterId cannot be empty if provided.");
+            if (description != null && (description.Length < 5 || description.Length > 100)) AddNotification("MovementsDescriptionLengthInvalid", "Description must be between 5 and 100 characters.");
+            if (quantity <= 0) AddNotification("MovementsQuantityInvalid", "Quantity must be greater than zero.");
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                AddNotification("MovementsTypeInvalid", "Type cannot be empty.");
+                return;
+            }
             string movementType = type.ToUpper();
-            if (movementType != "IN" && movementType != "OUT") throw new ArgumentException("Type must be either 'IN' or 'OUT'.");
-            if (movementType == "OUT" && !printerId.HasValue) throw new ArgumentException("A PrinterId must be provided for stock OUT movements.");
+            if (movementType != "IN" && movementType != "OUT") AddNotification("MovementsTypeInvalid", "Type must be either 'IN' or 'OUT'.");
+            if (movementType == "OUT" && !printerId.HasValue) AddNotification("MovementsPrinterIdRequiredForOutMovement", "A PrinterId must be provided for stock OUT movements.");
         }
     }
 }

@@ -13,7 +13,8 @@ public class LocationController(LocationService locationService) : ControllerBas
     [HttpPost]
     public async Task<ActionResult<LocationResponse>> CreateLocation([FromBody] CreateLocationRequest request)
     {
-        LocationResponse createdLocation = await locationService.CreateLocationAsync(request);
+        LocationResponse? createdLocation = await locationService.CreateLocationAsync(request);
+        if (createdLocation == null) return BadRequest();
         return CreatedAtAction(nameof(GetLocationById), new { id = createdLocation.Id }, createdLocation);
     }
     [HttpGet]

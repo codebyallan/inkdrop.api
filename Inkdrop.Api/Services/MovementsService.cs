@@ -2,24 +2,38 @@ using Inkdrop.Api.Data;
 using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Entities;
+using Inkdrop.Api.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
 
-public class MovementsService(ApplicationDbContext context)
+public class MovementsService(ApplicationDbContext context, NotificationContext notificationContext)
 {
-    public async Task<MovementsResponse> CreateAsync(CreateMovementRequest createMovementRequest)
+    public async Task<MovementsResponse?> CreateAsync(CreateMovementRequest request)
     {
-        if (createMovementRequest.TonerId == Guid.Empty) throw new Exception("TonerId is required");
-        Toner toner = await context.Toners.FindAsync(createMovementRequest.TonerId) ?? throw new Exception("Toner not found");
-        if (createMovementRequest.Type.Equals("OUT", StringComparison.CurrentCultureIgnoreCase))
+        Toner? toner = await context.Toners.FindAsync(request.TonerId);
+        if (toner == null) notificationContext.AddNotification("TonerId", "Not found");
+        if (request.Type.Equals("OUT", StringComparison.OrdinalIgnoreCase))
         {
-            if (createMovementRequest.PrinterId == null || createMovementRequest.PrinterId == Guid.Empty) throw new Exception("PrinterId is required for OUT movements");
-            _ = await context.Printers.FindAsync(createMovementRequest.PrinterId) ?? throw new Exception("Printer not found");
-            toner.Out(createMovementRequest.Quantity);
+            Printer? printer = await context.Printers.FindAsync(request.PrinterId);
+            if (printer == null) notificationContext.AddNotification("PrinterId", "Not found");
         }
-        else toner.In(createMovementRequest.Quantity);
-        Movements movement = new(createMovementRequest.TonerId, createMovementRequest.PrinterId, createMovementRequest.Quantity, createMovementRequest.Description, createMovementRequest.Type);
+        if (!notificationContext.IsValid) return null;
+        if (request.Type.Equals("OUT", StringComparison.OrdinalIgnoreCase))
+            toner!.Out(request.Quantity);
+        else
+            toner!.In(request.Quantity);
+        if (!toner.IsValid)
+        {
+            notificationContext.AddNotifications(toner.Notifications);
+            return null;
+        }
+        Movements movement = new(request.TonerId, request.PrinterId, request.Quantity, request.Description, request.Type);
+        if (!movement.IsValid)
+        {
+            notificationContext.AddNotifications(movement.Notifications);
+            return null;
+        }
         context.Movements.Add(movement);
         await context.SaveChangesAsync();
         return new MovementsResponse(movement.Id, movement.TonerId, movement.PrinterId, movement.Quantity, movement.Description, movement.Type, movement.CreatedAt);

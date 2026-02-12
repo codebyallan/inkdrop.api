@@ -2,15 +2,21 @@ using Inkdrop.Api.Data;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
+using Inkdrop.Api.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
 
-public class LocationService(ApplicationDbContext dbContext)
+public class LocationService(ApplicationDbContext dbContext, NotificationContext notificationContext)
 {
-    public async Task<LocationResponse> CreateLocationAsync(CreateLocationRequest createLocationRequest)
+    public async Task<LocationResponse?> CreateLocationAsync(CreateLocationRequest createLocationRequest)
     {
         Location? location = new(createLocationRequest.Name, createLocationRequest.Description);
+        if (!location.IsValid)
+        {
+            notificationContext.AddNotifications(location);
+            return null;
+        }
         dbContext.Locations.Add(location);
         await dbContext.SaveChangesAsync();
         return new LocationResponse(location.Id, location.Name, location.Description, location.CreatedAt);
@@ -22,6 +28,11 @@ public class LocationService(ApplicationDbContext dbContext)
         Location? location = await dbContext.Locations.FindAsync(id);
         if (location is null) return null;
         location.Update(updateLocationRequest.Name!, updateLocationRequest.Description);
+        if (!location.IsValid)
+        {
+            notificationContext.AddNotifications(location);
+            return null;
+        }
         await dbContext.SaveChangesAsync();
         return new LocationResponse(location.Id, location.Name, location.Description, location.CreatedAt);
     }
@@ -29,7 +40,8 @@ public class LocationService(ApplicationDbContext dbContext)
     {
         Location? location = await dbContext.Locations.FindAsync(id);
         if (location is null) return false;
-        if (await dbContext.Printers.AnyAsync(p => p.LocationId == id)) throw new InvalidOperationException("Cannot delete location because it is associated with existing printers.");
+        if (await dbContext.Printers.AnyAsync(p => p.LocationId == id)) notificationContext.AddNotification("LocationHasPrinters", "Cannot delete location because it is associated with existing printers.");
+        if (!notificationContext.IsValid) return false;
         location.MarkAsDeleted();
         await dbContext.SaveChangesAsync();
         return true;

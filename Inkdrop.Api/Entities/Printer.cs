@@ -26,6 +26,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     {
         if (Name == name) return;
         ValidateName(name);
+        if (!IsValid) return;
         Name = name;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -33,6 +34,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     {
         if (Model == model) return;
         ValidateModel(model);
+        if (!IsValid) return;
         Model = model;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -40,6 +42,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     {
         if (Manufacturer == manufacturer) return;
         ValidateManufacturer(manufacturer);
+        if (!IsValid) return;
         Manufacturer = manufacturer;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -47,6 +50,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     {
         if (IpAddress == ipAddress) return;
         ValidateIpAddress(ipAddress);
+        if (!IsValid) return;
         IpAddress = ipAddress;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -54,6 +58,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     {
         if (LocationId == locationId) return;
         ValidateLocationId(locationId);
+        if (!IsValid) return;
         LocationId = locationId;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -70,31 +75,47 @@ public class Printer : Base, ISoftDeletable, IUpdatable
         DeletedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
-    private static void ValidateName(string name)
+    private void ValidateName(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Printer name cannot be empty.", nameof(name));
-        if (name.Length < 3 || name.Length > 100) throw new ArgumentException("Printer name must be between 3 and 100 characters.", nameof(name));
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            AddNotification("PrinterNameInvalid", "Printer name cannot be empty.");
+            return;
+        }
+        if (name.Length < 3 || name.Length > 100) AddNotification("PrinterNameLengthInvalid", "Printer name must be between 3 and 100 characters.");
     }
-    private static void ValidateModel(string model)
+    private void ValidateModel(string model)
     {
-        if (string.IsNullOrWhiteSpace(model)) throw new ArgumentException("Printer model cannot be empty.", nameof(model));
-        if (model.Length < 3 || model.Length > 100) throw new ArgumentException("Printer model must be between 3 and 100 characters.", nameof(model));
+        if (string.IsNullOrWhiteSpace(model))
+        {
+            AddNotification("PrinterModelInvalid", "Printer model cannot be empty.");
+            return;
+        }
+        if (model.Length < 3 || model.Length > 100) AddNotification("PrinterModelLengthInvalid", "Printer model must be between 3 and 100 characters.");
     }
-    private static void ValidateManufacturer(string manufacturer)
+    private void ValidateManufacturer(string manufacturer)
     {
-        if (string.IsNullOrWhiteSpace(manufacturer)) throw new ArgumentException("Printer manufacturer cannot be empty.", nameof(manufacturer));
-        if (manufacturer.Length < 2 || manufacturer.Length > 100) throw new ArgumentException("Printer manufacturer must be between 2 and 100 characters.", nameof(manufacturer));
+        if (string.IsNullOrWhiteSpace(manufacturer))
+        {
+            AddNotification("PrinterManufacturerInvalid", "Printer manufacturer cannot be empty.");
+            return;
+        }
+        if (manufacturer.Length < 2 || manufacturer.Length > 100) AddNotification("PrinterManufacturerLengthInvalid", "Printer manufacturer must be between 2 and 100 characters.");
     }
-    private static void ValidateIpAddress(string ipAddress)
+    private void ValidateIpAddress(string ipAddress)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress)) throw new ArgumentException("Printer IP address cannot be empty.", nameof(ipAddress));
-        if (ipAddress.Length < 7 || ipAddress.Length > 45) throw new ArgumentException("Printer IP address must be between 7 and 45 characters.", nameof(ipAddress));
+        if (string.IsNullOrWhiteSpace(ipAddress))
+        {
+            AddNotification("PrinterIpAddressInvalid", "Printer IP address cannot be empty.");
+            return;
+        }
+        if (ipAddress.Length < 7 || ipAddress.Length > 45) AddNotification("PrinterIpAddressLengthInvalid", "Printer IP address must be between 7 and 45 characters.");
     }
-    private static void ValidateLocationId(Guid locationId)
+    private void ValidateLocationId(Guid locationId)
     {
-        if (locationId == Guid.Empty) throw new ArgumentException("Location ID cannot be empty.", nameof(locationId));
+        if (locationId == Guid.Empty) AddNotification("PrinterLocationIdInvalid", "Location ID cannot be empty.");
     }
-    private static void Validate(string name, string model, string manufacturer, string ipAddress, Guid locationId)
+    private void Validate(string name, string model, string manufacturer, string ipAddress, Guid locationId)
     {
         ValidateName(name);
         ValidateModel(model);
