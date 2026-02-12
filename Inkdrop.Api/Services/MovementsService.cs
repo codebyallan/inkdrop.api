@@ -1,5 +1,6 @@
 using Inkdrop.Api.Data;
-using Inkdrop.Api.DTOs;
+using Inkdrop.Api.Dtos.Responses;
+using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,22 +8,22 @@ namespace Inkdrop.Api.Services;
 
 public class MovementsService(ApplicationDbContext context)
 {
-    public async Task<Movements> CreateAsync(CreateMovementDto createMovementDto)
+    public async Task<MovementsResponse> CreateAsync(CreateMovementRequest createMovementRequest)
     {
-        if (createMovementDto.TonerId == Guid.Empty) throw new Exception("TonerId is required");
-        Toner toner = await context.Toners.FindAsync(createMovementDto.TonerId) ?? throw new Exception("Toner not found");
-        if (createMovementDto.Type.Equals("OUT", StringComparison.CurrentCultureIgnoreCase))
+        if (createMovementRequest.TonerId == Guid.Empty) throw new Exception("TonerId is required");
+        Toner toner = await context.Toners.FindAsync(createMovementRequest.TonerId) ?? throw new Exception("Toner not found");
+        if (createMovementRequest.Type.Equals("OUT", StringComparison.CurrentCultureIgnoreCase))
         {
-            if (createMovementDto.PrinterId == null || createMovementDto.PrinterId == Guid.Empty) throw new Exception("PrinterId is required for OUT movements");
-            _ = await context.Printers.FindAsync(createMovementDto.PrinterId) ?? throw new Exception("Printer not found");
-            toner.Out(createMovementDto.Quantity);
+            if (createMovementRequest.PrinterId == null || createMovementRequest.PrinterId == Guid.Empty) throw new Exception("PrinterId is required for OUT movements");
+            _ = await context.Printers.FindAsync(createMovementRequest.PrinterId) ?? throw new Exception("Printer not found");
+            toner.Out(createMovementRequest.Quantity);
         }
-        else toner.In(createMovementDto.Quantity);
-        Movements movement = new(createMovementDto.TonerId, createMovementDto.PrinterId, createMovementDto.Quantity, createMovementDto.Description, createMovementDto.Type);
+        else toner.In(createMovementRequest.Quantity);
+        Movements movement = new(createMovementRequest.TonerId, createMovementRequest.PrinterId, createMovementRequest.Quantity, createMovementRequest.Description, createMovementRequest.Type);
         context.Movements.Add(movement);
         await context.SaveChangesAsync();
-        return movement;
+        return new MovementsResponse(movement.Id, movement.TonerId, movement.PrinterId, movement.Quantity, movement.Description, movement.Type, movement.CreatedAt);
     }
-    public async Task<List<Movements>> GetAllAsync() => await context.Movements.AsNoTracking().ToListAsync();
-    public async Task<Movements?> GetByIdAsync(Guid id) => await context.Movements.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+    public async Task<List<MovementsResponse>> GetAllAsync() => await context.Movements.AsNoTracking().Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync();
+    public async Task<MovementsResponse?> GetByIdAsync(Guid id) => await context.Movements.AsNoTracking().Where(m => m.Id == id).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).FirstOrDefaultAsync();
 }

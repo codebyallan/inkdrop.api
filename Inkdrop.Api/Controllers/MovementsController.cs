@@ -1,5 +1,5 @@
-using Inkdrop.Api.DTOs;
-using Inkdrop.Api.Entities;
+using Inkdrop.Api.Dtos.Responses;
+using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,23 +10,23 @@ namespace Inkdrop.Api.Controllers;
 public class MovementsController(MovementsService movementsService) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult<Movements>> CreateMovements([FromBody] CreateMovementDto request)
+    public async Task<ActionResult<MovementsResponse>> CreateMovements([FromBody] CreateMovementRequest request)
     {
-        Movements movement = await movementsService.CreateAsync(request);
+        MovementsResponse movement = await movementsService.CreateAsync(request);
         return CreatedAtAction(nameof(GetMovementsById), new { id = movement.Id }, movement);
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Movements>>> GetMovements()
+    public async Task<ActionResult<IEnumerable<MovementsResponse>>> GetMovements()
     {
-        IEnumerable<Movements> movements = await movementsService.GetAllAsync();
+        IEnumerable<MovementsResponse> movements = await movementsService.GetAllAsync();
         return Ok(movements);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Movements>> GetMovementsById([FromRoute] Guid id)
+    public async Task<ActionResult<MovementsResponse>> GetMovementsById([FromRoute] Guid id)
     {
-        Movements? movement = await movementsService.GetByIdAsync(id);
+        MovementsResponse? movement = await movementsService.GetByIdAsync(id);
         if (movement == null) return NotFound();
         return Ok(movement);
     }

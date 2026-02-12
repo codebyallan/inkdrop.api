@@ -1,5 +1,6 @@
 using Inkdrop.Api.DTOs;
-using Inkdrop.Api.Entities;
+using Inkdrop.Api.DTOs.Requests;
+using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,28 +11,28 @@ namespace Inkdrop.Api.Controllers;
 public class LocationController(LocationService locationService) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult<Location>> CreateLocation([FromBody] CreateLocationDto request)
+    public async Task<ActionResult<LocationResponse>> CreateLocation([FromBody] CreateLocationRequest request)
     {
-        Location createdLocation = await locationService.CreateLocationAsync(request);
+        LocationResponse createdLocation = await locationService.CreateLocationAsync(request);
         return CreatedAtAction(nameof(GetLocationById), new { id = createdLocation.Id }, createdLocation);
     }
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Location>>> GetLocations()
+    public async Task<ActionResult<IEnumerable<LocationResponse>>> GetLocations()
     {
-        IEnumerable<Location> locations = await locationService.GetAllLocationsAsync();
+        IEnumerable<LocationResponse> locations = await locationService.GetAllLocationsAsync();
         return Ok(locations);
     }
     [HttpGet("{id}")]
-    public async Task<ActionResult<Location>> GetLocationById([FromRoute] Guid id)
+    public async Task<ActionResult<LocationResponse>> GetLocationById([FromRoute] Guid id)
     {
-        Location? location = await locationService.GetLocationByIdAsync(id);
+        LocationResponse? location = await locationService.GetLocationByIdAsync(id);
         if (location == null) return NotFound();
         return Ok(location);
     }
     [HttpPut("{id}")]
-    public async Task<ActionResult<Location>> UpdateLocation([FromRoute] Guid id, [FromBody] UpdateLocationDto request)
+    public async Task<ActionResult<LocationResponse>> UpdateLocation([FromRoute] Guid id, [FromBody] UpdateLocationRequest request)
     {
-        Location? updatedLocation = await locationService.UpdateLocationAsync(id, request);
+        LocationResponse? updatedLocation = await locationService.UpdateLocationAsync(id, request);
         if (updatedLocation == null) return NotFound();
         return Ok(updatedLocation);
     }

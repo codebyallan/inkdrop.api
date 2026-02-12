@@ -1,5 +1,5 @@
-using Inkdrop.Api.DTOs;
-using Inkdrop.Api.Entities;
+using Inkdrop.Api.Dtos.Responses;
+using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,33 +10,33 @@ namespace Inkdrop.Api.Controllers;
 public class TonerController(TonerService tonerService) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult> CreateToner([FromBody] CreateTonerDto request)
+    public async Task<ActionResult<TonerResponse>> CreateToner([FromBody] CreateTonerRequest request)
     {
-        Toner toner = await tonerService.CreateTonerAsync(request);
+        TonerResponse toner = await tonerService.CreateTonerAsync(request);
         return CreatedAtAction(nameof(GetTonerById), new { id = toner.Id }, toner);
     }
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Toner>>> GetToners()
+    public async Task<ActionResult<IEnumerable<TonerResponse>>> GetToners()
     {
-        IEnumerable<Toner> toners = await tonerService.GetAllTonersAsync();
+        IEnumerable<TonerResponse> toners = await tonerService.GetAllTonersAsync();
         return Ok(toners);
     }
     [HttpGet("{id}")]
-    public async Task<ActionResult<Toner>> GetTonerById(Guid id)
+    public async Task<ActionResult<TonerResponse>> GetTonerById(Guid id)
     {
-        Toner? toner = await tonerService.GetTonerByIdAsync(id);
+        TonerResponse? toner = await tonerService.GetTonerByIdAsync(id);
         if (toner == null) return NotFound();
         return Ok(toner);
     }
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateToner(Guid id, [FromBody] UpdateTonerDto request)
+    public async Task<ActionResult<TonerResponse>> UpdateToner(Guid id, [FromBody] UpdateTonerRequest request)
     {
-        Toner? updated = await tonerService.UpdateTonerAsync(id, request);
+        TonerResponse? updated = await tonerService.UpdateTonerAsync(id, request);
         if (updated == null) return NotFound();
-        return NoContent();
+        return Ok(updated);
     }
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteToner(Guid id)
+    public async Task<ActionResult<bool>> DeleteToner(Guid id)
     {
         bool deleted = await tonerService.DeleteTonerAsync(id);
         if (!deleted) return NotFound();

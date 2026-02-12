@@ -1,5 +1,6 @@
 using Inkdrop.Api.Data;
-using Inkdrop.Api.DTOs;
+using Inkdrop.Api.Dtos.Responses;
+using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,23 +8,23 @@ namespace Inkdrop.Api.Services;
 
 public class TonerService(ApplicationDbContext dbContext)
 {
-    public async Task<Toner> CreateTonerAsync(CreateTonerDto createTonerDto)
+    public async Task<TonerResponse> CreateTonerAsync(CreateTonerRequest createTonerRequest)
     {
-        Toner toner = new(createTonerDto.Model, createTonerDto.Manufacturer, createTonerDto.Color);
+        Toner toner = new(createTonerRequest.Model, createTonerRequest.Manufacturer, createTonerRequest.Color);
         dbContext.Toners.Add(toner);
         await dbContext.SaveChangesAsync();
-        return toner;
+        return new TonerResponse(toner.Id, toner.Model, toner.Manufacturer, toner.Color, toner.Quantity, toner.CreatedAt);
     }
-    public async Task<IEnumerable<Toner>> GetAllTonersAsync() => await dbContext.Toners.AsNoTracking().ToListAsync();
-    public async Task<Toner?> GetTonerByIdAsync(Guid id) => await dbContext.Toners.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
-    public async Task<Toner?> UpdateTonerAsync(Guid id, UpdateTonerDto updateTonerDto)
+    public async Task<IEnumerable<TonerResponse>> GetAllTonersAsync() => await dbContext.Toners.AsNoTracking().Select(t => new TonerResponse(t.Id, t.Model, t.Manufacturer, t.Color, t.Quantity, t.CreatedAt)).ToListAsync();
+    public async Task<TonerResponse?> GetTonerByIdAsync(Guid id) => await dbContext.Toners.AsNoTracking().Where(t => t.Id == id).Select(t => new TonerResponse(t.Id, t.Model, t.Manufacturer, t.Color, t.Quantity, t.CreatedAt)).FirstOrDefaultAsync();
+    public async Task<TonerResponse?> UpdateTonerAsync(Guid id, UpdateTonerRequest updateTonerRequest)
     {
         Toner? toner = await dbContext.Toners.FindAsync(id);
         if (toner is null) return null;
-        if (updateTonerDto.Model is not null) toner.UpdateModel(updateTonerDto.Model);
-        if (updateTonerDto.Manufacturer is not null) toner.UpdateManufacturer(updateTonerDto.Manufacturer);
+        if (updateTonerRequest.Model is not null) toner.UpdateModel(updateTonerRequest.Model);
+        if (updateTonerRequest.Manufacturer is not null) toner.UpdateManufacturer(updateTonerRequest.Manufacturer);
         await dbContext.SaveChangesAsync();
-        return toner;
+        return new TonerResponse(toner.Id, toner.Model, toner.Manufacturer, toner.Color, toner.Quantity, toner.CreatedAt);
     }
     public async Task<bool> DeleteTonerAsync(Guid id)
     {
