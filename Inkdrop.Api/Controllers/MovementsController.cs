@@ -1,6 +1,7 @@
 using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class MovementsController(MovementsService movementsService) : ControllerBase
+public class MovementsController(MovementsService movementsService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreateMovements")]
@@ -18,6 +19,11 @@ public class MovementsController(MovementsService movementsService) : Controller
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<MovementsResponse>> CreateMovements([FromBody] CreateMovementRequest request)
     {
+        if (request is null)
+        {
+            notificationContext.AddNotification("RequestError.", "body cannot be empty.");
+            return BadRequest();
+        }
         MovementsResponse? movement = await movementsService.CreateAsync(request);
         if (movement == null) return BadRequest();
         return CreatedAtAction(nameof(GetMovementsById), new { id = movement.Id }, movement);

@@ -1,6 +1,7 @@
 using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TonerController(TonerService tonerService) : ControllerBase
+public class TonerController(TonerService tonerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreateToner")]
@@ -18,6 +19,11 @@ public class TonerController(TonerService tonerService) : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TonerResponse>> CreateToner([FromBody] CreateTonerRequest request)
     {
+        if (request is null)
+        {
+            notificationContext.AddNotification("RequestError.", "body cannot be empty.");
+            return BadRequest();
+        }
         TonerResponse? toner = await tonerService.CreateTonerAsync(request);
         if (toner == null) return BadRequest();
         return CreatedAtAction(nameof(GetTonerById), new { id = toner.Id }, toner);
@@ -54,6 +60,11 @@ public class TonerController(TonerService tonerService) : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TonerResponse>> UpdateToner(Guid id, [FromBody] UpdateTonerRequest request)
     {
+        if (request is null)
+        {
+            notificationContext.AddNotification("RequestError.", "body cannot be empty.");
+            return BadRequest();
+        }
         TonerResponse? updated = await tonerService.UpdateTonerAsync(id, request);
         if (updated == null) return NotFound();
         return Ok(updated);

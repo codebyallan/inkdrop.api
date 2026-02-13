@@ -1,5 +1,6 @@
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +8,7 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PrinterController(PrinterService printerService) : ControllerBase
+public class PrinterController(PrinterService printerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreatePrinter")]
@@ -17,6 +18,11 @@ public class PrinterController(PrinterService printerService) : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PrinterResponse>> CreatePrinter(CreatePrinterRequest request)
     {
+        if (request is null)
+        {
+            notificationContext.AddNotification("RequestError.", "body cannot be empty.");
+            return BadRequest();
+        }
         PrinterResponse? createdPrinter = await printerService.CreatePrinterAsync(request);
         if (createdPrinter == null) return BadRequest();
         return CreatedAtAction(nameof(GetPrinterById), new { id = createdPrinter.Id }, createdPrinter);
@@ -53,6 +59,11 @@ public class PrinterController(PrinterService printerService) : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PrinterResponse>> UpdatePrinter(Guid id, UpdatePrinterRequest request)
     {
+        if (request is null)
+        {
+            notificationContext.AddNotification("RequestError.", "body cannot be empty.");
+            return BadRequest();
+        }
         PrinterResponse? updatedPrinter = await printerService.UpdatePrinterAsync(id, request);
         if (updatedPrinter == null) return NotFound();
         return Ok(updatedPrinter);
