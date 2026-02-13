@@ -51,6 +51,16 @@ public class TonerController(TonerService tonerService, NotificationContext noti
         if (toner == null) return NotFound();
         return Ok(toner);
     }
+    [HttpGet("low")]
+    [EndpointName("GetLowStock")]
+    [EndpointSummary("Get toners with low stock levels")]
+    [EndpointDescription("Returns a list of all toners where the current quantity is below the specified threshold. If no threshold is provided, it defaults to 3.")]
+    [ProducesResponseType(typeof(IEnumerable<TonerResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<TonerResponse>>> GetLowStock([FromQuery] int threshold = 3)
+    {
+        IEnumerable<TonerResponse> toners = await tonerService.GetLowerToners(threshold);
+        return Ok(toners);
+    }
     [HttpPut("{id}")]
     [EndpointName("UpdateToner")]
     [EndpointSummary("Update an existing toner")]

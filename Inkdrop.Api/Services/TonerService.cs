@@ -46,4 +46,5 @@ public class TonerService(ApplicationDbContext dbContext, NotificationContext no
         await dbContext.SaveChangesAsync();
         return true;
     }
+    public async Task<IEnumerable<TonerResponse>> GetLowerToners(int threshold = 3) => await dbContext.Toners.AsNoTracking().Where(t => t.Quantity <= threshold).Select(t => new TonerResponse(t.Id, t.Model, t.Manufacturer, t.Color, t.Quantity, t.CreatedAt)).ToListAsync();
 }
