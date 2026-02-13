@@ -10,6 +10,8 @@ namespace Inkdrop.Api.Entities
         private Movements() { }
         public Movements(Guid tonerId, Guid? printerId, int quantity, string? description, string type)
         {
+            type = type?.Trim() ?? string.Empty;
+            description = description?.Trim() ?? null;
             Validate(tonerId, printerId, quantity, description, type);
             TonerId = tonerId;
             Type = type.ToUpper();
@@ -30,7 +32,7 @@ namespace Inkdrop.Api.Entities
             }
             string movementType = type.ToUpper();
             if (movementType != "IN" && movementType != "OUT") AddNotification("MovementsTypeInvalid", "Type must be either 'IN' or 'OUT'.");
-            if (movementType == "OUT" && !printerId.HasValue) AddNotification("MovementsPrinterIdRequiredForOutMovement", "A PrinterId must be provided for stock OUT movements.");
+            if (movementType == "OUT" && (!printerId.HasValue || printerId.Value == Guid.Empty)) AddNotification("MovementsPrinterIdRequiredForOutMovement", "A valid PrinterId must be provided for stock OUT movements.");
         }
     }
 }

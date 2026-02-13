@@ -13,6 +13,9 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     private Toner() { }
     public Toner(string model, string manufacturer, string color)
     {
+        model = model?.Trim() ?? string.Empty;
+        manufacturer = manufacturer?.Trim() ?? string.Empty;
+        color = color?.Trim() ?? string.Empty;
         Validate(model, manufacturer, color);
         Model = model;
         Manufacturer = manufacturer;
@@ -20,6 +23,7 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     }
     public void UpdateModel(string model)
     {
+        model = model?.Trim() ?? string.Empty;
         if (Model == model) return;
         ValidateModel(model);
         if (!IsValid) return;
@@ -28,6 +32,7 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     }
     public void UpdateManufacturer(string manufacturer)
     {
+        manufacturer = manufacturer?.Trim() ?? string.Empty;
         if (Manufacturer == manufacturer) return;
         ValidateManufacturer(manufacturer);
         if (!IsValid) return;

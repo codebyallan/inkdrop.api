@@ -15,6 +15,10 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     private Printer() { }
     public Printer(string name, string model, string manufacturer, string ipAddress, Guid locationId)
     {
+        name = name?.Trim() ?? string.Empty;
+        model = model?.Trim() ?? string.Empty;
+        manufacturer = manufacturer?.Trim() ?? string.Empty;
+        ipAddress = ipAddress?.Replace(" ", "") ?? string.Empty;
         Validate(name, model, manufacturer, ipAddress, locationId);
         Name = name;
         Model = model;
@@ -24,6 +28,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     }
     public void UpdateName(string name)
     {
+        name = name?.Trim() ?? string.Empty;
         if (Name == name) return;
         ValidateName(name);
         if (!IsValid) return;
@@ -32,6 +37,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     }
     public void UpdateModel(string model)
     {
+        model = model?.Trim() ?? string.Empty;
         if (Model == model) return;
         ValidateModel(model);
         if (!IsValid) return;
@@ -40,6 +46,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     }
     public void UpdateManufacturer(string manufacturer)
     {
+        manufacturer = manufacturer?.Trim() ?? string.Empty;
         if (Manufacturer == manufacturer) return;
         ValidateManufacturer(manufacturer);
         if (!IsValid) return;
@@ -48,6 +55,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     }
     public void UpdateIpAddress(string ipAddress)
     {
+        ipAddress = ipAddress?.Replace(" ", "") ?? string.Empty;
         if (IpAddress == ipAddress) return;
         ValidateIpAddress(ipAddress);
         if (!IsValid) return;
@@ -109,7 +117,11 @@ public class Printer : Base, ISoftDeletable, IUpdatable
             AddNotification("PrinterIpAddressInvalid", "Printer IP address cannot be empty.");
             return;
         }
-        if (ipAddress.Length < 7 || ipAddress.Length > 45) AddNotification("PrinterIpAddressLengthInvalid", "Printer IP address must be between 7 and 45 characters.");
+        string ipRegex = @"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ipAddress, ipRegex))
+        {
+            AddNotification("PrinterIpAddressFormatInvalid", "Invalid IP address format. Use 192.168.0.1 format.");
+        }
     }
     private void ValidateLocationId(Guid locationId)
     {
