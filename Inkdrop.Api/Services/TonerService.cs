@@ -11,6 +11,7 @@ public class TonerService(ApplicationDbContext dbContext, NotificationContext no
 {
     public async Task<TonerResponse?> CreateTonerAsync(CreateTonerRequest createTonerRequest)
     {
+        if (await dbContext.Toners.AnyAsync(t => t.Model == createTonerRequest.Model && t.Manufacturer == createTonerRequest.Manufacturer && t.Color == createTonerRequest.Color)) notificationContext.AddNotification("TonerAlreadyExists", "A toner with the given model, manufacturer and color already exists.");
         Toner toner = new(createTonerRequest.Model, createTonerRequest.Manufacturer, createTonerRequest.Color);
         if (!toner.IsValid)
         {
@@ -27,6 +28,9 @@ public class TonerService(ApplicationDbContext dbContext, NotificationContext no
     {
         Toner? toner = await dbContext.Toners.FindAsync(id);
         if (toner is null) return null;
+        string model = updateTonerRequest.Model ?? toner.Model;
+        string manufacturer = updateTonerRequest.Manufacturer ?? toner.Manufacturer;
+        if (await dbContext.Toners.AnyAsync(t => t.Id != id && t.Model == model && t.Manufacturer == manufacturer && t.Color == toner.Color)) notificationContext.AddNotification("TonerAlreadyExists", "A toner with the given model, manufacturer and color already exists.");
         if (updateTonerRequest.Model is not null) toner.UpdateModel(updateTonerRequest.Model);
         if (updateTonerRequest.Manufacturer is not null) toner.UpdateManufacturer(updateTonerRequest.Manufacturer);
         notificationContext.AddNotifications(toner);

@@ -19,7 +19,7 @@ public class MovementsService(ApplicationDbContext context, NotificationContext 
             if (printer == null) notificationContext.AddNotification("PrinterId", "Not found");
         }
         if (!notificationContext.IsValid) return null;
-        if (request.Type.Equals("OUT", StringComparison.OrdinalIgnoreCase))
+        if ("OUT".Equals(request.Type, StringComparison.OrdinalIgnoreCase))
             toner!.Out(request.Quantity);
         else
             toner!.In(request.Quantity);

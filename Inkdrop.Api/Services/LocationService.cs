@@ -11,6 +11,7 @@ public class LocationService(ApplicationDbContext dbContext, NotificationContext
 {
     public async Task<LocationResponse?> CreateLocationAsync(CreateLocationRequest createLocationRequest)
     {
+        if (await dbContext.Locations.AnyAsync(l => l.Name == createLocationRequest.Name)) notificationContext.AddNotification("LocationNameAlreadyExists", "A location with the given name already exists.");
         Location? location = new(createLocationRequest.Name, createLocationRequest.Description);
         if (!location.IsValid)
         {
@@ -25,6 +26,7 @@ public class LocationService(ApplicationDbContext dbContext, NotificationContext
     public async Task<LocationResponse?> GetLocationByIdAsync(Guid id) => await dbContext.Locations.AsNoTracking().Where(l => l.Id == id).Select(l => new LocationResponse(l.Id, l.Name, l.Description, l.CreatedAt)).FirstOrDefaultAsync();
     public async Task<LocationResponse?> UpdateLocationAsync(Guid id, UpdateLocationRequest updateLocationRequest)
     {
+        if (await dbContext.Locations.AnyAsync(l => l.Name == updateLocationRequest.Name && l.Id != id)) notificationContext.AddNotification("LocationNameAlreadyExists", "A location with the given name already exists.");
         Location? location = await dbContext.Locations.FindAsync(id);
         if (location is null) return null;
         location.Update(updateLocationRequest.Name!, updateLocationRequest.Description);

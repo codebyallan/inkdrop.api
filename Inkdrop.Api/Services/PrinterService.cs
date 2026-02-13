@@ -11,6 +11,7 @@ namespace Inkdrop.Api.Services
     {
         public async Task<PrinterResponse?> CreatePrinterAsync(CreatePrinterRequest createPrinterRequest)
         {
+            if (await dbContext.Printers.AnyAsync(p => p.IpAddress == createPrinterRequest.IpAddress)) notificationContext.AddNotification("PrinterIpAddressAlreadyExists", "A printer with the given IP address already exists.");
             bool locationExists = await dbContext.Locations.AnyAsync(l => l.Id == createPrinterRequest.LocationId);
             if (!locationExists) notificationContext.AddNotification("LocationId", "Not found");
             if (!notificationContext.IsValid) return null;
@@ -28,6 +29,7 @@ namespace Inkdrop.Api.Services
         public async Task<PrinterResponse?> GetPrinterByIdAsync(Guid id) => await dbContext.Printers.AsNoTracking().Where(p => p.Id == id).Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.CreatedAt)).FirstOrDefaultAsync();
         public async Task<PrinterResponse?> UpdatePrinterAsync(Guid id, UpdatePrinterRequest updatePrinterRequest)
         {
+            if (updatePrinterRequest.IpAddress is not null && await dbContext.Printers.AnyAsync(p => p.IpAddress == updatePrinterRequest.IpAddress && p.Id != id)) notificationContext.AddNotification("PrinterIpAddressAlreadyExists", "A printer with the given IP address already exists.");
             Printer? printer = await dbContext.Printers.FindAsync(id);
             if (printer is null) return null;
             if (updatePrinterRequest.Name is not null) printer.UpdateName(updatePrinterRequest.Name);

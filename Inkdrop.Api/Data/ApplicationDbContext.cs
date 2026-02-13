@@ -24,6 +24,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(l => l.DeletedAt)
                 .HasColumnType("timestamp with time zone");
             entity.HasQueryFilter(l => l.DeletedAt == null);
+            entity.HasIndex(l => l.Name)
+                .IsUnique();
         }
         );
         modelBuilder.Entity<Printer>(printer =>
@@ -54,6 +56,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             printer.Property(l => l.DeletedAt)
                 .HasColumnType("timestamp with time zone");
             printer.HasQueryFilter(l => l.DeletedAt == null);
+            printer.HasIndex(l => l.IpAddress)
+                .IsUnique();
         }
         );
         modelBuilder.Entity<Toner>(toner =>
@@ -77,6 +81,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             toner.Property(l => l.DeletedAt)
                 .HasColumnType("timestamp with time zone");
             toner.HasQueryFilter(l => l.DeletedAt == null);
+            toner.HasIndex(l => new { l.Model, l.Manufacturer, l.Color })
+                .IsUnique();
         }
         );
         modelBuilder.Entity<Movements>(movement =>
@@ -103,10 +109,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
         }
         );
-        
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (typeof(Inkdrop.Api.Notifications.Notifiable).IsAssignableFrom(entityType.ClrType))
+            if (typeof(Notifications.Notifiable).IsAssignableFrom(entityType.ClrType))
             {
                 modelBuilder.Entity(entityType.ClrType).Ignore("Notifications");
                 modelBuilder.Entity(entityType.ClrType).Ignore("IsValid");
