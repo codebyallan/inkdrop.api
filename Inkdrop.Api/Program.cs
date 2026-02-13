@@ -20,6 +20,11 @@ builder.Services.AddScoped<PrinterService>();
 builder.Services.AddScoped<TonerService>();
 builder.Services.AddScoped<MovementsService>();
 builder.Services.AddScoped<NotificationContext>();
+
+// Global exception handling
+builder.Services.AddExceptionHandler<Inkdrop.Api.Handlers.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllers(options =>
     options.Filters.Add<NotificationFilter>())
     .ConfigureApiBehaviorOptions(options =>
@@ -58,6 +63,8 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = string.Empty;
     });
 }
+
+app.UseExceptionHandler();
 
 app.MapControllers();
 app.Run();
