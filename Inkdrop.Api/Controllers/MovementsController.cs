@@ -63,4 +63,14 @@ public class MovementsController(MovementsService movementsService, Notification
         IEnumerable<MovementsResponse> movements = await movementsService.GetByPrinterIdAsync(id);
         return Ok(movements);
     }
+    [HttpGet("toner/{id}")]
+    [EndpointName("GetMovementsByTonerId")]
+    [EndpointSummary("Get all movements for a specific toner")]
+    [EndpointDescription("Returns a chronological list of all IN and OUT movements associated with the specified Toner ID.")]
+    [ProducesResponseType(typeof(IEnumerable<MovementsResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<MovementsResponse>>> GetMovementsByTonerId([FromRoute] Guid id)
+    {
+        IEnumerable<MovementsResponse> movements = await movementsService.GetByTonerIdAsync(id);
+        return Ok(movements);
+    }
 }
