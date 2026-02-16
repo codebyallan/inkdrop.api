@@ -1,4 +1,5 @@
 using Inkdrop.Api.Data;
+using Inkdrop.Api.Extensions;
 using Inkdrop.Api.Filters;
 using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
@@ -10,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Get the connection string from configuration
 var connectionString = builder.Configuration.GetSection("DbConfig:ConnectionString").Value
-    ?? throw new InvalidOperationException("Connection string 'DbConfig:ConnectionString' not found."); ;
+    ?? throw new InvalidOperationException("Connection string 'DbConfig:ConnectionString' not found.");
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -20,6 +21,7 @@ builder.Services.AddScoped<PrinterService>();
 builder.Services.AddScoped<TonerService>();
 builder.Services.AddScoped<MovementsService>();
 builder.Services.AddScoped<NotificationContext>();
+builder.Services.AddCustomCors(builder.Configuration);
 
 // Global exception handling
 builder.Services.AddExceptionHandler<Inkdrop.Api.Handlers.GlobalExceptionHandler>();
@@ -46,6 +48,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+app.UseCors("DefaultCors");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
