@@ -18,6 +18,7 @@ public class LocationService(ApplicationDbContext dbContext, NotificationContext
             notificationContext.AddNotifications(location);
             return null;
         }
+        if (!notificationContext.IsValid) return null;
         dbContext.Locations.Add(location);
         await dbContext.SaveChangesAsync();
         return new LocationResponse(location.Id, location.Name, location.Description, location.CreatedAt);
