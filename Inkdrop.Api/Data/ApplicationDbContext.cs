@@ -25,7 +25,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
             entity.HasQueryFilter(l => l.DeletedAt == null);
             entity.HasIndex(l => l.Name)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
         }
         );
         modelBuilder.Entity<Printer>(printer =>
@@ -57,7 +58,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
             printer.HasQueryFilter(l => l.DeletedAt == null);
             printer.HasIndex(l => l.IpAddress)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
         }
         );
         modelBuilder.Entity<Toner>(toner =>
@@ -82,7 +84,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
             toner.HasQueryFilter(l => l.DeletedAt == null);
             toner.HasIndex(l => new { l.Model, l.Manufacturer, l.Color })
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
         }
         );
         modelBuilder.Entity<Movements>(movement =>
