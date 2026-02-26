@@ -44,7 +44,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             printer.Property(l => l.IpAddress)
                 .HasMaxLength(45)
                 .IsRequired();
-            printer.HasOne<Location>()
+            printer.HasOne(l => l.Location)
                 .WithMany()
                 .HasForeignKey(p => p.LocationId)
                 .OnDelete(DeleteBehavior.Restrict);

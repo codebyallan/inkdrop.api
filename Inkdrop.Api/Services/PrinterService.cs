@@ -14,19 +14,19 @@ namespace Inkdrop.Api.Services
             if (await dbContext.Printers.AnyAsync(p => p.IpAddress == createPrinterRequest.IpAddress)) notificationContext.AddNotification("PrinterIpAddressAlreadyExists", "A printer with the given IP address already exists.");
             bool locationExists = await dbContext.Locations.AnyAsync(l => l.Id == createPrinterRequest.LocationId);
             if (!locationExists) notificationContext.AddNotification("LocationId", "Not found");
-            if (!notificationContext.IsValid) return null;
             Printer printer = new(createPrinterRequest.Name, createPrinterRequest.Model, createPrinterRequest.Manufacturer, createPrinterRequest.IpAddress, createPrinterRequest.LocationId);
             if (!printer.IsValid)
             {
                 notificationContext.AddNotifications(printer);
-                return null;
             }
+            if (!notificationContext.IsValid) return null;
             dbContext.Printers.Add(printer);
             await dbContext.SaveChangesAsync();
-            return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.CreatedAt);
+            await dbContext.Entry(printer).Reference(p => p.Location).LoadAsync();
+            return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt);
         }
-        public async Task<IEnumerable<PrinterResponse>> GetPrintersAsync() => await dbContext.Printers.AsNoTracking().Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.CreatedAt)).ToListAsync();
-        public async Task<PrinterResponse?> GetPrinterByIdAsync(Guid id) => await dbContext.Printers.AsNoTracking().Where(p => p.Id == id).Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.CreatedAt)).FirstOrDefaultAsync();
+        public async Task<IEnumerable<PrinterResponse>> GetPrintersAsync() => await dbContext.Printers.AsNoTracking().Include(p => p.Location).Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.Location.Name, p.CreatedAt)).ToListAsync();
+        public async Task<PrinterResponse?> GetPrinterByIdAsync(Guid id) => await dbContext.Printers.AsNoTracking().Include(p => p.Location).Where(p => p.Id == id).Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.Location.Name, p.CreatedAt)).FirstOrDefaultAsync();
         public async Task<PrinterResponse?> UpdatePrinterAsync(Guid id, UpdatePrinterRequest updatePrinterRequest)
         {
             if (updatePrinterRequest.IpAddress is not null && await dbContext.Printers.AnyAsync(p => p.IpAddress == updatePrinterRequest.IpAddress && p.Id != id)) notificationContext.AddNotification("PrinterIpAddressAlreadyExists", "A printer with the given IP address already exists.");
@@ -46,10 +46,11 @@ namespace Inkdrop.Api.Services
             if (!printer.IsValid)
             {
                 notificationContext.AddNotifications(printer.Notifications);
-                return null;
             }
+            if (!notificationContext.IsValid) return null;
             await dbContext.SaveChangesAsync();
-            return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.CreatedAt);
+            await dbContext.Entry(printer).Reference(p => p.Location).LoadAsync();
+            return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt);
         }
         public async Task<bool> DeletePrinterAsync(Guid id)
         {
