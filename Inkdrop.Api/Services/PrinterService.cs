@@ -56,7 +56,13 @@ namespace Inkdrop.Api.Services
         {
             Printer? printer = await dbContext.Printers.FindAsync(id);
             if (printer is null) return false;
-            printer.MarkAsDeleted();
+            var isMovementAssociated = await dbContext.Movements.AnyAsync(m => m.PrinterId == id);
+            if (!isMovementAssociated) printer.MarkAsDeleted();
+            else
+            {
+                notificationContext.AddNotification("PrinterIsInUse", "Printer is associated with movements and cannot be deleted.");
+                return false;
+            }
             await dbContext.SaveChangesAsync();
             return true;
         }

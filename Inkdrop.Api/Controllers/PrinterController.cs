@@ -78,7 +78,7 @@ public class PrinterController(PrinterService printerService, NotificationContex
     public async Task<IActionResult> DeletePrinter(Guid id)
     {
         bool deleted = await printerService.DeletePrinterAsync(id);
-        if (!deleted) return NotFound();
+        if (!deleted && notificationContext.IsValid) return NotFound();
         return NoContent();
     }
 }
