@@ -42,7 +42,13 @@ public class TonerService(ApplicationDbContext dbContext, NotificationContext no
     {
         Toner? toner = await dbContext.Toners.FindAsync(id);
         if (toner is null) return false;
-        toner.MarkAsDeleted();
+        var isMovementAssociated = await dbContext.Movements.AnyAsync(m => m.TonerId == id);
+        if (!isMovementAssociated) toner.MarkAsDeleted();
+        else
+        {
+            notificationContext.AddNotification("TonerAssociatedWithMovements", "Toner is associated with movements and cannot be deleted.");
+            return false;
+        }
         await dbContext.SaveChangesAsync();
         return true;
     }

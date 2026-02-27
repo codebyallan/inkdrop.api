@@ -89,7 +89,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
     public async Task<ActionResult<bool>> DeleteToner(Guid id)
     {
         bool deleted = await tonerService.DeleteTonerAsync(id);
-        if (!deleted) return NotFound();
+        if (!deleted && notificationContext.IsValid) return NotFound();
         return NoContent();
     }
 }
