@@ -112,6 +112,33 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
         }
         );
+        modelBuilder.Entity<User>(user =>
+        {
+            user.HasKey(l => l.Id);
+            user.Property(l => l.Username)
+                .HasMaxLength(100)
+                .IsRequired();
+            user.Property(l => l.Email)
+                .HasMaxLength(100)
+                .IsRequired();
+            user.Property(l => l.Password)
+                .HasMaxLength(255)
+                .IsRequired();
+            user.Property(l => l.CreatedAt)
+                .HasColumnType("timestamp with time zone");
+            user.Property(l => l.UpdatedAt)
+            .HasColumnType("timestamp with time zone");
+            user.Property(l => l.DeletedAt)
+               .HasColumnType("timestamp with time zone");
+            user.HasQueryFilter(l => l.DeletedAt == null);
+            user.HasIndex(l => l.Username)
+               .IsUnique()
+               .HasFilter("\"DeletedAt\" IS NULL");
+            user.HasIndex(l => l.Email)
+               .IsUnique()
+               .HasFilter("\"DeletedAt\" IS NULL");
+        }
+        );
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
