@@ -15,7 +15,7 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
 
     private User() { }
 
-    public User(string username, string email, string passwordHash, string salt, UserRole role)
+    public User(string username, string email, string passwordHash, string salt, UserRole? role)
     {
         username = username?.Trim() ?? string.Empty;
         email = email?.Trim() ?? string.Empty;
@@ -30,7 +30,7 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
         Email = email;
         PasswordHash = passwordHash;
         Salt = salt;
-        Role = role;
+        Role = role ?? UserRole.Technician;
     }
 
     public void UpdateProfile(string username, string email, UserRole role)
