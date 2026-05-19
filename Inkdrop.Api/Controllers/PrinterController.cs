@@ -1,14 +1,14 @@
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
-using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PrinterController(PrinterService printerService, NotificationContext notificationContext) : ControllerBase
+public sealed class PrinterController(IPrinterService printerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreatePrinter")]
@@ -23,7 +23,7 @@ public class PrinterController(PrinterService printerService, NotificationContex
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        PrinterResponse? createdPrinter = await printerService.CreatePrinterAsync(request);
+        PrinterResponse? createdPrinter = await printerService.CreatePrinterAsync(request, HttpContext.RequestAborted);
         if (createdPrinter == null) return BadRequest();
         return CreatedAtAction(nameof(GetPrinterById), new { id = createdPrinter.Id }, createdPrinter);
     }
@@ -34,7 +34,7 @@ public class PrinterController(PrinterService printerService, NotificationContex
     [ProducesResponseType(typeof(IEnumerable<PrinterResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<PrinterResponse>>> GetPrinters()
     {
-        IEnumerable<PrinterResponse> printers = await printerService.GetPrintersAsync();
+        IEnumerable<PrinterResponse> printers = await printerService.GetAllPrintersAsync(HttpContext.RequestAborted);
         return Ok(printers);
     }
     [HttpGet("{id}")]
@@ -46,7 +46,7 @@ public class PrinterController(PrinterService printerService, NotificationContex
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PrinterResponse>> GetPrinterById(Guid id)
     {
-        PrinterResponse? printer = await printerService.GetPrinterByIdAsync(id);
+        PrinterResponse? printer = await printerService.GetPrinterByIdAsync(id, HttpContext.RequestAborted);
         if (printer == null) return NotFound();
         return Ok(printer);
     }
@@ -64,7 +64,7 @@ public class PrinterController(PrinterService printerService, NotificationContex
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        PrinterResponse? updatedPrinter = await printerService.UpdatePrinterAsync(id, request);
+        PrinterResponse? updatedPrinter = await printerService.UpdatePrinterAsync(id, request, HttpContext.RequestAborted);
         if (updatedPrinter == null) return NotFound();
         return Ok(updatedPrinter);
     }
@@ -77,7 +77,7 @@ public class PrinterController(PrinterService printerService, NotificationContex
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeletePrinter(Guid id)
     {
-        bool deleted = await printerService.DeletePrinterAsync(id);
+        bool deleted = await printerService.DeletePrinterAsync(id, HttpContext.RequestAborted);
         if (!deleted && notificationContext.IsValid) return NotFound();
         return NoContent();
     }

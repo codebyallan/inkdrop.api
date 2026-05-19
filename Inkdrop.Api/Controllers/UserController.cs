@@ -15,14 +15,14 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserResponse>>> GetAll()
     {
-        var users = await userService.GetAllUsersAsync();
+        var users = await userService.GetAllUsersAsync(HttpContext.RequestAborted);
         return Ok(users);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<UserResponse>> GetById(Guid id)
     {
-        var user = await userService.GetUserByIdAsync(id);
+        var user = await userService.GetUserByIdAsync(id, HttpContext.RequestAborted);
         if (user is null) return NotFound();
         return Ok(user);
     }
@@ -30,7 +30,7 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpPost]
     public async Task<ActionResult<UserResponse>> Create([FromBody] RegisterRequest request)
     {
-        var user = await userService.CreateUserAsync(request);
+        var user = await userService.CreateUserAsync(request, HttpContext.RequestAborted);
         if (user is null) return BadRequest(new { Errors = notificationContext.Notifications });
         return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
     }
@@ -38,7 +38,7 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpPut("{id}")]
     public async Task<ActionResult<UserResponse>> Update(Guid id, [FromBody] UpdateUserRequest request)
     {
-        var user = await userService.UpdateUserAsync(id, request);
+        var user = await userService.UpdateUserAsync(id, request, HttpContext.RequestAborted);
         if (user is null) return NotFound();
         if (!notificationContext.IsValid) return BadRequest(new { Errors = notificationContext.Notifications });
         return Ok(user);
@@ -47,7 +47,7 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var success = await userService.DeleteUserAsync(id);
+        var success = await userService.DeleteUserAsync(id, HttpContext.RequestAborted);
         if (!success) return NotFound();
         return NoContent();
     }
@@ -55,7 +55,7 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpPatch("{id}/activate")]
     public async Task<IActionResult> Activate(Guid id)
     {
-        var success = await userService.ActivateUserAsync(id);
+        var success = await userService.ActivateUserAsync(id, HttpContext.RequestAborted);
         if (!success) return NotFound();
         return Ok(new { Message = "User activated successfully" });
     }
@@ -63,7 +63,7 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpPatch("{id}/deactivate")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await userService.DeactivateUserAsync(id);
+        var success = await userService.DeactivateUserAsync(id, HttpContext.RequestAborted);
         if (!success) return NotFound();
         return Ok(new { Message = "User deactivated successfully" });
     }

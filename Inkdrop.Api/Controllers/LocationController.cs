@@ -1,15 +1,15 @@
 using Inkdrop.Api.DTOs;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
-using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class LocationController(LocationService locationService, NotificationContext notificationContext) : ControllerBase
+public sealed class LocationController(ILocationService locationService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreateLocation")]
@@ -24,7 +24,7 @@ public class LocationController(LocationService locationService, NotificationCon
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        LocationResponse? createdLocation = await locationService.CreateLocationAsync(request);
+        LocationResponse? createdLocation = await locationService.CreateLocationAsync(request, HttpContext.RequestAborted);
         if (createdLocation == null) return BadRequest();
         return CreatedAtAction(nameof(GetLocationById), new { id = createdLocation.Id }, createdLocation);
     }
@@ -35,7 +35,7 @@ public class LocationController(LocationService locationService, NotificationCon
     [ProducesResponseType(typeof(IEnumerable<LocationResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LocationResponse>>> GetLocations()
     {
-        IEnumerable<LocationResponse> locations = await locationService.GetAllLocationsAsync();
+        IEnumerable<LocationResponse> locations = await locationService.GetAllLocationsAsync(HttpContext.RequestAborted);
         return Ok(locations);
     }
     [HttpGet("{id}")]
@@ -47,7 +47,7 @@ public class LocationController(LocationService locationService, NotificationCon
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<LocationResponse>> GetLocationById([FromRoute] Guid id)
     {
-        LocationResponse? location = await locationService.GetLocationByIdAsync(id);
+        LocationResponse? location = await locationService.GetLocationByIdAsync(id, HttpContext.RequestAborted);
         if (location == null) return NotFound();
         return Ok(location);
     }
@@ -65,7 +65,7 @@ public class LocationController(LocationService locationService, NotificationCon
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        LocationResponse? updatedLocation = await locationService.UpdateLocationAsync(id, request);
+        LocationResponse? updatedLocation = await locationService.UpdateLocationAsync(id, request, HttpContext.RequestAborted);
         if (updatedLocation == null) return NotFound();
         return Ok(updatedLocation);
     }
@@ -78,7 +78,7 @@ public class LocationController(LocationService locationService, NotificationCon
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeleteLocation([FromRoute] Guid id)
     {
-        bool deleted = await locationService.DeleteLocationAsync(id);
+        bool deleted = await locationService.DeleteLocationAsync(id, HttpContext.RequestAborted);
         if (!deleted) return NotFound();
         return NoContent();
     }

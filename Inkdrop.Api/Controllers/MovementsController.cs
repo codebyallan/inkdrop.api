@@ -1,15 +1,15 @@
-using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Requests;
+using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
-using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class MovementsController(MovementsService movementsService, NotificationContext notificationContext) : ControllerBase
+public sealed class MovementsController(IMovementsService movementsService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreateMovements")]
@@ -24,7 +24,7 @@ public class MovementsController(MovementsService movementsService, Notification
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        MovementsResponse? movement = await movementsService.CreateAsync(request);
+        MovementsResponse? movement = await movementsService.CreateAsync(request, HttpContext.RequestAborted);
         if (movement == null) return BadRequest();
         return CreatedAtAction(nameof(GetMovementsById), new { id = movement.Id }, movement);
     }
@@ -36,7 +36,7 @@ public class MovementsController(MovementsService movementsService, Notification
     [ProducesResponseType(typeof(IEnumerable<MovementsResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MovementsResponse>>> GetMovements()
     {
-        IEnumerable<MovementsResponse> movements = await movementsService.GetAllAsync();
+        IEnumerable<MovementsResponse> movements = await movementsService.GetAllMovementsAsync(HttpContext.RequestAborted);
         return Ok(movements);
     }
 
@@ -49,7 +49,7 @@ public class MovementsController(MovementsService movementsService, Notification
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<MovementsResponse>> GetMovementsById([FromRoute] Guid id)
     {
-        MovementsResponse? movement = await movementsService.GetByIdAsync(id);
+        MovementsResponse? movement = await movementsService.GetMovementByIdAsync(id, HttpContext.RequestAborted);
         if (movement == null) return NotFound();
         return Ok(movement);
     }
@@ -60,7 +60,7 @@ public class MovementsController(MovementsService movementsService, Notification
     [ProducesResponseType(typeof(IEnumerable<MovementsResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MovementsResponse>>> GetMovementsByPrinterId([FromRoute] Guid id)
     {
-        IEnumerable<MovementsResponse> movements = await movementsService.GetByPrinterIdAsync(id);
+        IEnumerable<MovementsResponse> movements = await movementsService.GetMovementsByPrinterIdAsync(id, HttpContext.RequestAborted);
         return Ok(movements);
     }
     [HttpGet("toner/{id}")]
@@ -70,7 +70,7 @@ public class MovementsController(MovementsService movementsService, Notification
     [ProducesResponseType(typeof(IEnumerable<MovementsResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MovementsResponse>>> GetMovementsByTonerId([FromRoute] Guid id)
     {
-        IEnumerable<MovementsResponse> movements = await movementsService.GetByTonerIdAsync(id);
+        IEnumerable<MovementsResponse> movements = await movementsService.GetMovementsByTonerIdAsync(id, HttpContext.RequestAborted);
         return Ok(movements);
     }
 }

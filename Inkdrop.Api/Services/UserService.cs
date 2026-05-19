@@ -17,12 +17,12 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
     private const int Iterations = 100000;
     private static readonly HashAlgorithmName HashAlgorithm = HashAlgorithmName.SHA256;
 
-    public async Task<UserResponse?> CreateUserAsync(RegisterRequest request)
+    public async Task<UserResponse?> CreateUserAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        if (await dbContext.Users.AnyAsync(u => u.Username == request.Username))
+        if (await dbContext.Users.AnyAsync(u => u.Username == request.Username, cancellationToken))
             notificationContext.AddNotification("UserUsernameExists", "Username already exists.");
 
-        if (await dbContext.Users.AnyAsync(u => u.Email == request.Email))
+        if (await dbContext.Users.AnyAsync(u => u.Email == request.Email, cancellationToken))
             notificationContext.AddNotification("UserEmailExists", "Email already exists.");
 
         if (!notificationContext.IsValid) return null;
@@ -40,24 +40,24 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         }
 
         dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(user);
     }
 
-    public async Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request)
+    public async Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
-        User? user = await dbContext.Users.FindAsync(id);
+        User? user = await dbContext.Users.FindAsync([id], cancellationToken);
         if (user is null) return null;
 
         string username = request.Username ?? user.Username;
         string email = request.Email ?? user.Email;
         UserRole role = request.Role ?? user.Role;
 
-        if (await dbContext.Users.AnyAsync(u => u.Id != id && u.Username == username))
+        if (await dbContext.Users.AnyAsync(u => u.Id != id && u.Username == username, cancellationToken))
             notificationContext.AddNotification("UserUsernameExists", "Username already exists.");
 
-        if (await dbContext.Users.AnyAsync(u => u.Id != id && u.Email == email))
+        if (await dbContext.Users.AnyAsync(u => u.Id != id && u.Email == email, cancellationToken))
             notificationContext.AddNotification("UserEmailExists", "Email already exists.");
 
         if (!notificationContext.IsValid) return null;
@@ -67,36 +67,36 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
 
         if (!notificationContext.IsValid) return null;
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
         return MapToResponse(user);
     }
 
-    public async Task<bool> DeleteUserAsync(Guid id)
+    public async Task<bool> DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        User? user = await dbContext.Users.FindAsync(id);
+        User? user = await dbContext.Users.FindAsync([id], cancellationToken);
         if (user is null) return false;
 
         user.MarkAsDeleted();
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    public async Task<UserResponse?> GetUserByIdAsync(Guid id)
+    public async Task<UserResponse?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        User? user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        User? user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         return user is null ? null : MapToResponse(user);
     }
 
-    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Users.AsNoTracking()
             .Select(u => MapToResponse(u))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<User?> AuthenticateAsync(LoginRequest request)
+    public async Task<User?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
-        User? user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+        User? user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
         if (user is null) return null;
 
         if (!user.IsActive)
@@ -117,23 +117,23 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         return user;
     }
 
-    public async Task<bool> ActivateUserAsync(Guid id)
+    public async Task<bool> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        User? user = await dbContext.Users.FindAsync(id);
+        User? user = await dbContext.Users.FindAsync([id], cancellationToken);
         if (user is null) return false;
 
         user.Activate();
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    public async Task<bool> DeactivateUserAsync(Guid id)
+    public async Task<bool> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        User? user = await dbContext.Users.FindAsync(id);
+        User? user = await dbContext.Users.FindAsync([id], cancellationToken);
         if (user is null) return false;
 
         user.Deactivate();
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
 

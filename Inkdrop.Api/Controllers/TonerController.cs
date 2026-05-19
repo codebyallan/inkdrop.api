@@ -1,15 +1,15 @@
-using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Requests;
+using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Responses;
+using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
-using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TonerController(TonerService tonerService, NotificationContext notificationContext) : ControllerBase
+public sealed class TonerController(ITonerService tonerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
     [EndpointName("CreateToner")]
@@ -24,7 +24,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        TonerResponse? toner = await tonerService.CreateTonerAsync(request);
+        TonerResponse? toner = await tonerService.CreateTonerAsync(request, HttpContext.RequestAborted);
         if (toner == null) return BadRequest();
         return CreatedAtAction(nameof(GetTonerById), new { id = toner.Id }, toner);
     }
@@ -35,7 +35,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
     [ProducesResponseType(typeof(IEnumerable<TonerResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TonerResponse>>> GetToners()
     {
-        IEnumerable<TonerResponse> toners = await tonerService.GetAllTonersAsync();
+        IEnumerable<TonerResponse> toners = await tonerService.GetAllTonersAsync(HttpContext.RequestAborted);
         return Ok(toners);
     }
     [HttpGet("{id}")]
@@ -47,7 +47,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TonerResponse>> GetTonerById(Guid id)
     {
-        TonerResponse? toner = await tonerService.GetTonerByIdAsync(id);
+        TonerResponse? toner = await tonerService.GetTonerByIdAsync(id, HttpContext.RequestAborted);
         if (toner == null) return NotFound();
         return Ok(toner);
     }
@@ -58,7 +58,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
     [ProducesResponseType(typeof(IEnumerable<TonerResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TonerResponse>>> GetLowStock([FromQuery] int threshold = 3)
     {
-        IEnumerable<TonerResponse> toners = await tonerService.GetLowerToners(threshold);
+        IEnumerable<TonerResponse> toners = await tonerService.GetLowerTonersAsync(threshold, HttpContext.RequestAborted);
         return Ok(toners);
     }
     [HttpPut("{id}")]
@@ -75,7 +75,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        TonerResponse? updated = await tonerService.UpdateTonerAsync(id, request);
+        TonerResponse? updated = await tonerService.UpdateTonerAsync(id, request, HttpContext.RequestAborted);
         if (updated == null) return NotFound();
         return Ok(updated);
     }
@@ -88,7 +88,7 @@ public class TonerController(TonerService tonerService, NotificationContext noti
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<bool>> DeleteToner(Guid id)
     {
-        bool deleted = await tonerService.DeleteTonerAsync(id);
+        bool deleted = await tonerService.DeleteTonerAsync(id, HttpContext.RequestAborted);
         if (!deleted && notificationContext.IsValid) return NotFound();
         return NoContent();
     }

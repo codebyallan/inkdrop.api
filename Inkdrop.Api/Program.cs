@@ -18,10 +18,10 @@ var connectionString = builder.Configuration.GetSection("DbConfig:ConnectionStri
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
-builder.Services.AddScoped<LocationService>();
-builder.Services.AddScoped<PrinterService>();
-builder.Services.AddScoped<TonerService>();
-builder.Services.AddScoped<MovementsService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IPrinterService, PrinterService>();
+builder.Services.AddScoped<ITonerService, TonerService>();
+builder.Services.AddScoped<IMovementsService, MovementsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<NotificationContext>();
 builder.Services.AddCustomCors(builder.Configuration);

@@ -6,12 +6,12 @@ namespace Inkdrop.Api.Interfaces;
 
 public interface IUserService
 {
-    Task<UserResponse?> CreateUserAsync(RegisterRequest request);
-    Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request);
-    Task<bool> DeleteUserAsync(Guid id);
-    Task<UserResponse?> GetUserByIdAsync(Guid id);
-    Task<IEnumerable<UserResponse>> GetAllUsersAsync();
-    Task<User?> AuthenticateAsync(LoginRequest request);
-    Task<bool> ActivateUserAsync(Guid id);
-    Task<bool> DeactivateUserAsync(Guid id);
+    Task<UserResponse?> CreateUserAsync(RegisterRequest request, CancellationToken cancellationToken = default);
+    Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default);
+    Task<bool> DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<UserResponse?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken cancellationToken = default);
+    Task<User?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default);
+    Task<bool> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default);
 }

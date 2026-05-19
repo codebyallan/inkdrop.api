@@ -1,21 +1,23 @@
 using Inkdrop.Api.Data;
-using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Requests;
+using Inkdrop.Api.Dtos.Responses;
+using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
+using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
 
-public class MovementsService(ApplicationDbContext context, NotificationContext notificationContext)
+public sealed class MovementsService(ApplicationDbContext context, NotificationContext notificationContext) : IMovementsService
 {
-    public async Task<MovementsResponse?> CreateAsync(CreateMovementRequest request)
+    public async Task<MovementsResponse?> CreateAsync(CreateMovementRequest request, CancellationToken cancellationToken = default)
     {
-        Toner? toner = await context.Toners.FindAsync(request.TonerId);
+        Toner? toner = await context.Toners.FindAsync([request.TonerId], cancellationToken);
         if (toner == null) notificationContext.AddNotification("TonerId", "Not found");
         if (request.Type.Equals("OUT", StringComparison.OrdinalIgnoreCase))
         {
-            Printer? printer = await context.Printers.FindAsync(request.PrinterId);
+            Printer? printer = await context.Printers.FindAsync([request.PrinterId], cancellationToken);
             if (printer == null) notificationContext.AddNotification("PrinterId", "Not found");
         }
         if (!notificationContext.IsValid) return null;
@@ -35,12 +37,19 @@ public class MovementsService(ApplicationDbContext context, NotificationContext 
             return null;
         }
         context.Movements.Add(movement);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
         return new MovementsResponse(movement.Id, movement.TonerId, movement.PrinterId, movement.Quantity, movement.Description, movement.Type, movement.CreatedAt);
     }
-    public async Task<IEnumerable<MovementsResponse>> GetAllAsync() => await context.Movements.AsNoTracking().Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync();
-    public async Task<MovementsResponse?> GetByIdAsync(Guid id) => await context.Movements.AsNoTracking().Where(m => m.Id == id).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).FirstOrDefaultAsync();
-    public async Task<IEnumerable<MovementsResponse>> GetByPrinterIdAsync(Guid printerId) => await context.Movements.AsNoTracking().Where(m => m.PrinterId == printerId).OrderByDescending(m => m.CreatedAt).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync();
-    public async Task<IEnumerable<MovementsResponse>> GetByTonerIdAsync(Guid tonerId) => await context.Movements.AsNoTracking().Where(m => m.TonerId == tonerId).OrderByDescending(m => m.CreatedAt).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync();
 
+    public async Task<IEnumerable<MovementsResponse>> GetAllMovementsAsync(CancellationToken cancellationToken = default) => 
+        await context.Movements.AsNoTracking().Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync(cancellationToken);
+
+    public async Task<MovementsResponse?> GetMovementByIdAsync(Guid id, CancellationToken cancellationToken = default) => 
+        await context.Movements.AsNoTracking().Where(m => m.Id == id).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IEnumerable<MovementsResponse>> GetMovementsByPrinterIdAsync(Guid printerId, CancellationToken cancellationToken = default) => 
+        await context.Movements.AsNoTracking().Where(m => m.PrinterId == printerId).OrderByDescending(m => m.CreatedAt).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync(cancellationToken);
+
+    public async Task<IEnumerable<MovementsResponse>> GetMovementsByTonerIdAsync(Guid tonerId, CancellationToken cancellationToken = default) => 
+        await context.Movements.AsNoTracking().Where(m => m.TonerId == tonerId).OrderByDescending(m => m.CreatedAt).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync(cancellationToken);
 }
