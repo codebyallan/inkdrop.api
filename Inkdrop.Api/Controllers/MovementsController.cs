@@ -3,12 +3,14 @@ using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin,Technician")]
 public sealed class MovementsController(IMovementsService movementsService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]

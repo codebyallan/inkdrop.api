@@ -2,12 +2,14 @@ using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public sealed class PrinterController(IPrinterService printerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
