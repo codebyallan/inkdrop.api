@@ -1,0 +1,17 @@
+# Git
+.git
+.gitignore
+
+# .NET
+bin/
+obj/
+appsettings.Development.json
+
+# IDEs
+.idea/
+.vscode/
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
