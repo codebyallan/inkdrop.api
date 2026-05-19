@@ -1,8 +1,10 @@
 using Inkdrop.Api.Data;
 using Inkdrop.Api.Extensions;
 using Inkdrop.Api.Filters;
+using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
@@ -20,8 +22,45 @@ builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<PrinterService>();
 builder.Services.AddScoped<TonerService>();
 builder.Services.AddScoped<MovementsService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<NotificationContext>();
 builder.Services.AddCustomCors(builder.Configuration);
+
+// Authentication & Authorization
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "Inkdrop.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("StaffOnly", policy => policy.RequireRole("Admin", "Technician"));
+});
+
+builder.Services.AddAntiforgery(options => 
+{
+    options.HeaderName = "X-XSRF-TOKEN";
+});
 
 // Global exception handling
 builder.Services.AddExceptionHandler<Inkdrop.Api.Handlers.GlobalExceptionHandler>();
@@ -50,6 +89,10 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 app.UseCors("DefaultCors");
+app.UseStaticFiles();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -65,10 +108,17 @@ if (app.Environment.IsDevelopment())
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
         options.RoutePrefix = string.Empty;
+        options.InjectJavascript("/swagger-compat.js");
     });
 }
 
 app.UseExceptionHandler();
+
+// Seed Database
+using (var scope = app.Services.CreateScope())
+{
+    await DbInitializer.InitializeAsync(scope.ServiceProvider);
+}
 
 app.MapControllers();
 app.Run();

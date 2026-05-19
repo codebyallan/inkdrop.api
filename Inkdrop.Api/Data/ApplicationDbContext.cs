@@ -5,12 +5,41 @@ namespace Inkdrop.Api.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
+    public DbSet<User> Users => Set<User>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Printer> Printers => Set<Printer>();
     public DbSet<Toner> Toners => Set<Toner>();
     public DbSet<Movements> Movements => Set<Movements>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>(user =>
+        {
+            user.HasKey(u => u.Id);
+            user.Property(u => u.Username)
+                .HasMaxLength(50)
+                .IsRequired();
+            user.Property(u => u.Email)
+                .HasMaxLength(100)
+                .IsRequired();
+            user.Property(u => u.PasswordHash)
+                .IsRequired();
+            user.Property(u => u.Salt)
+                .IsRequired();
+            user.Property(u => u.CreatedAt)
+                .HasColumnType("timestamp with time zone");
+            user.Property(u => u.UpdatedAt)
+                .HasColumnType("timestamp with time zone");
+            user.Property(u => u.DeletedAt)
+                .HasColumnType("timestamp with time zone");
+            user.HasQueryFilter(u => u.DeletedAt == null);
+            user.HasIndex(u => u.Username)
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
+            user.HasIndex(u => u.Email)
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
+        });
+
         modelBuilder.Entity<Location>(entity =>
         {
             entity.HasKey(l => l.Id);
