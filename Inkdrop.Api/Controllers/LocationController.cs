@@ -26,9 +26,9 @@ public sealed class LocationController(ILocationService locationService, Notific
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        LocationResponse? createdLocation = await locationService.CreateLocationAsync(request, HttpContext.RequestAborted);
-        if (createdLocation == null) return BadRequest();
-        return CreatedAtAction(nameof(GetLocationById), new { id = createdLocation.Id }, createdLocation);
+        var result = await locationService.CreateLocationAsync(request, HttpContext.RequestAborted);
+        if (!result.IsSuccess) return BadRequest();
+        return CreatedAtAction(nameof(GetLocationById), new { id = result.Value!.Id }, result.Value);
     }
     [HttpGet]
     [EndpointName("GetLocations")]
@@ -49,9 +49,9 @@ public sealed class LocationController(ILocationService locationService, Notific
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<LocationResponse>> GetLocationById([FromRoute] Guid id)
     {
-        LocationResponse? location = await locationService.GetLocationByIdAsync(id, HttpContext.RequestAborted);
-        if (location == null) return NotFound();
-        return Ok(location);
+        var result = await locationService.GetLocationByIdAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        return Ok(result.Value);
     }
     [HttpPut("{id}")]
     [EndpointName("UpdateLocation")]
@@ -67,9 +67,10 @@ public sealed class LocationController(ILocationService locationService, Notific
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        LocationResponse? updatedLocation = await locationService.UpdateLocationAsync(id, request, HttpContext.RequestAborted);
-        if (updatedLocation == null) return NotFound();
-        return Ok(updatedLocation);
+        var result = await locationService.UpdateLocationAsync(id, request, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
+        return Ok(result.Value);
     }
     [HttpDelete("{id}")]
     [EndpointName("DeleteLocation")]
@@ -80,9 +81,9 @@ public sealed class LocationController(ILocationService locationService, Notific
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeleteLocation([FromRoute] Guid id)
     {
-        bool deleted = await locationService.DeleteLocationAsync(id, HttpContext.RequestAborted);
-        if (!deleted && notificationContext.IsValid) return NotFound();
-        if (!deleted) return BadRequest();
+        var result = await locationService.DeleteLocationAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
         return NoContent();
     }
 }

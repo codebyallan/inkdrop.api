@@ -26,9 +26,9 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        TonerResponse? toner = await tonerService.CreateTonerAsync(request, HttpContext.RequestAborted);
-        if (toner == null) return BadRequest();
-        return CreatedAtAction(nameof(GetTonerById), new { id = toner.Id }, toner);
+        var result = await tonerService.CreateTonerAsync(request, HttpContext.RequestAborted);
+        if (!result.IsSuccess) return BadRequest();
+        return CreatedAtAction(nameof(GetTonerById), new { id = result.Value!.Id }, result.Value);
     }
     [HttpGet]
     [EndpointName("GetAllToners")]
@@ -49,9 +49,9 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TonerResponse>> GetTonerById(Guid id)
     {
-        TonerResponse? toner = await tonerService.GetTonerByIdAsync(id, HttpContext.RequestAborted);
-        if (toner == null) return NotFound();
-        return Ok(toner);
+        var result = await tonerService.GetTonerByIdAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        return Ok(result.Value);
     }
     [HttpGet("low")]
     [EndpointName("GetLowStock")]
@@ -77,9 +77,10 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        TonerResponse? updated = await tonerService.UpdateTonerAsync(id, request, HttpContext.RequestAborted);
-        if (updated == null) return NotFound();
-        return Ok(updated);
+        var result = await tonerService.UpdateTonerAsync(id, request, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
+        return Ok(result.Value);
     }
     [HttpDelete("{id}")]
     [EndpointName("DeleteToner")]
@@ -90,9 +91,9 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeleteToner(Guid id)
     {
-        bool deleted = await tonerService.DeleteTonerAsync(id, HttpContext.RequestAborted);
-        if (!deleted && notificationContext.IsValid) return NotFound();
-        if (!deleted) return BadRequest();
+        var result = await tonerService.DeleteTonerAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
         return NoContent();
     }
 }

@@ -25,9 +25,9 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        PrinterResponse? createdPrinter = await printerService.CreatePrinterAsync(request, HttpContext.RequestAborted);
-        if (createdPrinter == null) return BadRequest();
-        return CreatedAtAction(nameof(GetPrinterById), new { id = createdPrinter.Id }, createdPrinter);
+        var result = await printerService.CreatePrinterAsync(request, HttpContext.RequestAborted);
+        if (!result.IsSuccess) return BadRequest();
+        return CreatedAtAction(nameof(GetPrinterById), new { id = result.Value!.Id }, result.Value);
     }
     [HttpGet]
     [EndpointName("GetAllPrinters")]
@@ -48,9 +48,9 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PrinterResponse>> GetPrinterById(Guid id)
     {
-        PrinterResponse? printer = await printerService.GetPrinterByIdAsync(id, HttpContext.RequestAborted);
-        if (printer == null) return NotFound();
-        return Ok(printer);
+        var result = await printerService.GetPrinterByIdAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        return Ok(result.Value);
     }
     [HttpPut("{id}")]
     [EndpointName("UpdatePrinter")]
@@ -66,9 +66,10 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        PrinterResponse? updatedPrinter = await printerService.UpdatePrinterAsync(id, request, HttpContext.RequestAborted);
-        if (updatedPrinter == null) return NotFound();
-        return Ok(updatedPrinter);
+        var result = await printerService.UpdatePrinterAsync(id, request, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
+        return Ok(result.Value);
     }
     [HttpDelete("{id}")]
     [EndpointName("DeletePrinter")]
@@ -79,9 +80,9 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeletePrinter(Guid id)
     {
-        bool deleted = await printerService.DeletePrinterAsync(id, HttpContext.RequestAborted);
-        if (!deleted && notificationContext.IsValid) return NotFound();
-        if (!deleted) return BadRequest();
+        var result = await printerService.DeletePrinterAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
         return NoContent();
     }
 }

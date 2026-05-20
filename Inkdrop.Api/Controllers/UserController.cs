@@ -22,49 +22,52 @@ public sealed class UserController(IUserService userService, NotificationContext
     [HttpGet("{id}")]
     public async Task<ActionResult<UserResponse>> GetById(Guid id)
     {
-        var user = await userService.GetUserByIdAsync(id, HttpContext.RequestAborted);
-        if (user is null) return NotFound();
-        return Ok(user);
+        var result = await userService.GetUserByIdAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        return Ok(result.Value);
     }
 
     [HttpPost]
     public async Task<ActionResult<UserResponse>> Create([FromBody] RegisterRequest request)
     {
-        var user = await userService.CreateUserAsync(request, HttpContext.RequestAborted);
-        if (user is null) return BadRequest(new { Errors = notificationContext.Notifications });
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        var result = await userService.CreateUserAsync(request, HttpContext.RequestAborted);
+        if (!result.IsSuccess) return BadRequest(new { Errors = notificationContext.Notifications });
+        return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<UserResponse>> Update(Guid id, [FromBody] UpdateUserRequest request)
     {
-        var user = await userService.UpdateUserAsync(id, request, HttpContext.RequestAborted);
-        if (user is null) return NotFound();
-        if (!notificationContext.IsValid) return BadRequest(new { Errors = notificationContext.Notifications });
-        return Ok(user);
+        var result = await userService.UpdateUserAsync(id, request, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest(new { Errors = notificationContext.Notifications });
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var success = await userService.DeleteUserAsync(id, HttpContext.RequestAborted);
-        if (!success) return NotFound();
+        var result = await userService.DeleteUserAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
         return NoContent();
     }
 
     [HttpPatch("{id}/activate")]
     public async Task<IActionResult> Activate(Guid id)
     {
-        var success = await userService.ActivateUserAsync(id, HttpContext.RequestAborted);
-        if (!success) return NotFound();
+        var result = await userService.ActivateUserAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
         return Ok(new { Message = "User activated successfully" });
     }
 
     [HttpPatch("{id}/deactivate")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
-        var success = await userService.DeactivateUserAsync(id, HttpContext.RequestAborted);
-        if (!success) return NotFound();
+        var result = await userService.DeactivateUserAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
         return Ok(new { Message = "User deactivated successfully" });
     }
 
@@ -77,9 +80,9 @@ public sealed class UserController(IUserService userService, NotificationContext
             return BadRequest();
         }
 
-        var success = await userService.ChangePasswordAsync(id, request, HttpContext.RequestAborted);
-        if (!success && notificationContext.IsValid) return NotFound();
-        if (!success) return BadRequest(new { Errors = notificationContext.Notifications });
+        var result = await userService.ChangePasswordAsync(id, request, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest(new { Errors = notificationContext.Notifications });
 
         return Ok(new { Message = "Password updated successfully" });
     }

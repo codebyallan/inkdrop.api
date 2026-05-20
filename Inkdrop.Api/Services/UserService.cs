@@ -5,6 +5,7 @@ using Inkdrop.Api.Entities;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Extensions;
+using Inkdrop.Api.Core;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,7 +20,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
     private const int Iterations = 100000;
     private static readonly HashAlgorithmName HashAlgorithm = HashAlgorithmName.SHA256;
 
-    public async Task<UserResponse?> CreateUserAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<UserResponse>> CreateUserAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
         if (await dbContext.Users.AnyAsync(u => u.Username == request.Username, cancellationToken))
             notificationContext.AddNotification("UserUsernameExists", "Username already exists.");
@@ -27,7 +28,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         if (await dbContext.Users.AnyAsync(u => u.Email == request.Email, cancellationToken))
             notificationContext.AddNotification("UserEmailExists", "Email already exists.");
 
-        if (!notificationContext.IsValid) return null;
+        if (!notificationContext.IsValid) return ServiceResult<UserResponse>.Failure();
 
         byte[] saltBytes = RandomNumberGenerator.GetBytes(SaltSize);
         string salt = Convert.ToBase64String(saltBytes);
@@ -40,7 +41,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         if (!user.IsValid)
         {
             notificationContext.AddNotifications(user);
-            return null;
+            return ServiceResult<UserResponse>.Failure();
         }
 
         dbContext.Users.Add(user);
@@ -51,16 +52,16 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         catch (DbUpdateException ex)
         {
             if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
-            return null;
+            return ServiceResult<UserResponse>.Failure();
         }
 
-        return MapToResponse(user);
+        return ServiceResult<UserResponse>.Success(MapToResponse(user));
     }
 
-    public async Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<UserResponse>> UpdateUserAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.FindAsync([id], cancellationToken);
-        if (user is null) return null;
+        if (user is null) return ServiceResult<UserResponse>.NotFound();
 
         string username = request.Username ?? user.Username;
         string email = request.Email ?? user.Email;
@@ -72,7 +73,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         if (await dbContext.Users.AnyAsync(u => u.Id != id && u.Email == email, cancellationToken))
             notificationContext.AddNotification("UserEmailExists", "Email already exists.");
 
-        if (!notificationContext.IsValid) return null;
+        if (!notificationContext.IsValid) return ServiceResult<UserResponse>.Failure();
 
         user.UpdateProfile(username, email, role);
         if (!user.IsValid)
@@ -80,7 +81,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
             notificationContext.AddNotifications(user);
         }
 
-        if (!notificationContext.IsValid) return null;
+        if (!notificationContext.IsValid) return ServiceResult<UserResponse>.Failure();
 
         try
         {
@@ -89,25 +90,25 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         catch (DbUpdateException ex)
         {
             if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
-            return null;
+            return ServiceResult<UserResponse>.Failure();
         }
-        return MapToResponse(user);
+        return ServiceResult<UserResponse>.Success(MapToResponse(user));
     }
 
-    public async Task<bool> DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<bool>> DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.FindAsync([id], cancellationToken);
-        if (user is null) return false;
+        if (user is null) return ServiceResult<bool>.NotFound();
 
         user.MarkAsDeleted();
         await dbContext.SaveChangesAsync(cancellationToken);
-        return true;
+        return ServiceResult<bool>.Success(true);
     }
 
-    public async Task<UserResponse?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<UserResponse>> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        return user is null ? null : MapToResponse(user);
+        return user is null ? ServiceResult<UserResponse>.NotFound() : ServiceResult<UserResponse>.Success(MapToResponse(user));
     }
 
     public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken cancellationToken = default)
@@ -140,41 +141,41 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         return new AuthResponse(user.Id, user.Username, user.Email, user.Role.ToString());
     }
 
-    public async Task<bool> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<bool>> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.FindAsync([id], cancellationToken);
-        if (user is null) return false;
+        if (user is null) return ServiceResult<bool>.NotFound();
 
         user.Activate();
         await dbContext.SaveChangesAsync(cancellationToken);
-        return true;
+        return ServiceResult<bool>.Success(true);
     }
 
-    public async Task<bool> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<bool>> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.FindAsync([id], cancellationToken);
-        if (user is null) return false;
+        if (user is null) return ServiceResult<bool>.NotFound();
 
         user.Deactivate();
         await dbContext.SaveChangesAsync(cancellationToken);
-        return true;
+        return ServiceResult<bool>.Success(true);
     }
 
-    public async Task<bool> ChangePasswordAsync(Guid id, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<bool>> ChangePasswordAsync(Guid id, ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.FindAsync([id], cancellationToken);
-        if (user is null) return false;
+        if (user is null) return ServiceResult<bool>.NotFound();
 
         if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
         {
             notificationContext.AddNotification("PasswordRequired", "Both current and new passwords are required.");
-            return false;
+            return ServiceResult<bool>.Failure();
         }
 
         if (string.IsNullOrWhiteSpace(user.Salt))
         {
             notificationContext.AddNotification("UserAccountError", "User account is missing security salt. Please contact an administrator.");
-            return false;
+            return ServiceResult<bool>.Failure();
         }
 
         try
@@ -185,26 +186,26 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
             if (computedHash != user.PasswordHash)
             {
                 notificationContext.AddNotification("InvalidCurrentPassword", "The current password provided is incorrect.");
-                return false;
+                return ServiceResult<bool>.Failure();
             }
         }
         catch (FormatException)
         {
             notificationContext.AddNotification("UserAccountError", "User account security data is corrupted. Please contact an administrator.");
-            return false;
+            return ServiceResult<bool>.Failure();
         }
 
         if (request.NewPassword == request.CurrentPassword)
         {
             notificationContext.AddNotification("NewPasswordSameAsOld", "The new password cannot be the same as the current password.");
-            return false;
+            return ServiceResult<bool>.Failure();
         }
 
         user.ValidatePasswordComplexity(request.NewPassword);
         if (!user.IsValid)
         {
             notificationContext.AddNotifications(user);
-            return false;
+            return ServiceResult<bool>.Failure();
         }
 
         byte[] newSaltBytes = RandomNumberGenerator.GetBytes(SaltSize);
@@ -213,7 +214,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
 
         user.UpdatePassword(newHash, newSalt);
         await dbContext.SaveChangesAsync(cancellationToken);
-        return true;
+        return ServiceResult<bool>.Success(true);
     }
 
     private string HashPassword(string password, byte[] salt)
