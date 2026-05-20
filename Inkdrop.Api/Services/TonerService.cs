@@ -49,7 +49,10 @@ public sealed class TonerService(ApplicationDbContext dbContext, NotificationCon
         if (await dbContext.Toners.AnyAsync(t => t.Id != id && t.Model == model && t.Manufacturer == manufacturer && t.Color == toner.Color, cancellationToken)) notificationContext.AddNotification("TonerAlreadyExists", "A toner with the given model, manufacturer and color already exists.");
         if (updateTonerRequest.Model is not null) toner.UpdateModel(updateTonerRequest.Model);
         if (updateTonerRequest.Manufacturer is not null) toner.UpdateManufacturer(updateTonerRequest.Manufacturer);
-        notificationContext.AddNotifications(toner);
+        if (!toner.IsValid)
+        {
+            notificationContext.AddNotifications(toner);
+        }
         if (!notificationContext.IsValid) return null;
         try
         {

@@ -28,13 +28,13 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
             toner!.In(request.Quantity);
         if (!toner.IsValid)
         {
-            notificationContext.AddNotifications(toner.Notifications);
+            notificationContext.AddNotifications(toner);
             return null;
         }
         Movements movement = new(request.TonerId, request.PrinterId, request.Quantity, request.Description, request.Type);
         if (!movement.IsValid)
         {
-            notificationContext.AddNotifications(movement.Notifications);
+            notificationContext.AddNotifications(movement);
             return null;
         }
         context.Movements.Add(movement);

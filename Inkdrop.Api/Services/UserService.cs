@@ -75,7 +75,10 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         if (!notificationContext.IsValid) return null;
 
         user.UpdateProfile(username, email, role);
-        notificationContext.AddNotifications(user);
+        if (!user.IsValid)
+        {
+            notificationContext.AddNotifications(user);
+        }
 
         if (!notificationContext.IsValid) return null;
 

@@ -60,7 +60,7 @@ public sealed class PrinterService(ApplicationDbContext dbContext, NotificationC
         }
         if (!printer.IsValid)
         {
-            notificationContext.AddNotifications(printer.Notifications);
+            notificationContext.AddNotifications(printer);
         }
         if (!notificationContext.IsValid) return null;
         try
