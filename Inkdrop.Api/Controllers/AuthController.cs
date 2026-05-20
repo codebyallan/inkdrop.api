@@ -23,7 +23,7 @@ public sealed class AuthController(IUserService userService, NotificationContext
         {
             HttpOnly = false,
             Secure = true,
-            SameSite = SameSiteMode.Strict
+            SameSite = SameSiteMode.None
         });
 
         return Ok();
