@@ -64,6 +64,21 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void ValidatePasswordComplexity(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            AddNotification("PasswordRequired", "Password is required.");
+            return;
+        }
+
+        if (password.Length < 6) AddNotification("PasswordTooShort", "Password must be at least 6 characters long.");
+        if (!password.Any(char.IsLower)) AddNotification("PasswordMissingLowercase", "Password must contain at least one lowercase letter.");
+        if (!password.Any(char.IsUpper)) AddNotification("PasswordMissingUppercase", "Password must contain at least one uppercase letter.");
+        if (!password.Any(char.IsDigit)) AddNotification("PasswordMissingDigit", "Password must contain at least one number.");
+        if (!password.Any(ch => !char.IsLetterOrDigit(ch))) AddNotification("PasswordMissingSpecialChar", "Password must contain at least one special character.");
+    }
+
     public void Deactivate()
     {
         IsActive = false;

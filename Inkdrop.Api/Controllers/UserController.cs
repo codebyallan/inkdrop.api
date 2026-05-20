@@ -67,4 +67,20 @@ public sealed class UserController(IUserService userService, NotificationContext
         if (!success) return NotFound();
         return Ok(new { Message = "User deactivated successfully" });
     }
+
+    [HttpPatch("{id}/password")]
+    public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest request)
+    {
+        if (request is null)
+        {
+            notificationContext.AddNotification("RequestError", "body cannot be empty.");
+            return BadRequest();
+        }
+
+        var success = await userService.ChangePasswordAsync(id, request, HttpContext.RequestAborted);
+        if (!success && notificationContext.IsValid) return NotFound();
+        if (!success) return BadRequest(new { Errors = notificationContext.Notifications });
+
+        return Ok(new { Message = "Password updated successfully" });
+    }
 }

@@ -14,4 +14,5 @@ public interface IUserService
     Task<User?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<bool> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> ChangePasswordAsync(Guid id, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }

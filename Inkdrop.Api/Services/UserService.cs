@@ -33,6 +33,8 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
 
         User user = new(request.Username, request.Email, passwordHash, salt, request.Role);
         
+        user.ValidatePasswordComplexity(request.Password);
+
         if (!user.IsValid)
         {
             notificationContext.AddNotifications(user);
@@ -133,6 +135,62 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         if (user is null) return false;
 
         user.Deactivate();
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> ChangePasswordAsync(Guid id, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        User? user = await dbContext.Users.FindAsync([id], cancellationToken);
+        if (user is null) return false;
+
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            notificationContext.AddNotification("PasswordRequired", "Both current and new passwords are required.");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(user.Salt))
+        {
+            notificationContext.AddNotification("UserAccountError", "User account is missing security salt. Please contact an administrator.");
+            return false;
+        }
+
+        try
+        {
+            byte[] saltBytes = Convert.FromBase64String(user.Salt);
+            string computedHash = HashPassword(request.CurrentPassword, saltBytes);
+
+            if (computedHash != user.PasswordHash)
+            {
+                notificationContext.AddNotification("InvalidCurrentPassword", "The current password provided is incorrect.");
+                return false;
+            }
+        }
+        catch (FormatException)
+        {
+            notificationContext.AddNotification("UserAccountError", "User account security data is corrupted. Please contact an administrator.");
+            return false;
+        }
+
+        if (request.NewPassword == request.CurrentPassword)
+        {
+            notificationContext.AddNotification("NewPasswordSameAsOld", "The new password cannot be the same as the current password.");
+            return false;
+        }
+
+        user.ValidatePasswordComplexity(request.NewPassword);
+        if (!user.IsValid)
+        {
+            notificationContext.AddNotifications(user);
+            return false;
+        }
+
+        byte[] newSaltBytes = RandomNumberGenerator.GetBytes(SaltSize);
+        string newSalt = Convert.ToBase64String(newSaltBytes);
+        string newHash = HashPassword(request.NewPassword, newSaltBytes);
+
+        user.UpdatePassword(newHash, newSalt);
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
