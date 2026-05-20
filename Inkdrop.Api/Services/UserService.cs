@@ -117,7 +117,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<User?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<AuthResponse?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         User? user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
         if (user is null) return null;
@@ -137,7 +137,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
             return null;
         }
 
-        return user;
+        return new AuthResponse(user.Id, user.Username, user.Email, user.Role.ToString());
     }
 
     public async Task<bool> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default)

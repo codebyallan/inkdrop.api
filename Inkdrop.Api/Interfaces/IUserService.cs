@@ -11,7 +11,7 @@ public interface IUserService
     Task<bool> DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<UserResponse?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken cancellationToken = default);
-    Task<User?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default);
+    Task<AuthResponse?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<bool> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> ChangePasswordAsync(Guid id, ChangePasswordRequest request, CancellationToken cancellationToken = default);
