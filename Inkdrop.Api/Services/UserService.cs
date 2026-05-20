@@ -4,9 +4,11 @@ using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
+using Inkdrop.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using Npgsql;
 
 namespace Inkdrop.Api.Services;
 
@@ -42,7 +44,15 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         }
 
         dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return null;
+        }
 
         return MapToResponse(user);
     }
@@ -69,7 +79,15 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
 
         if (!notificationContext.IsValid) return null;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return null;
+        }
         return MapToResponse(user);
     }
 

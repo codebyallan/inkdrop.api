@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
 
@@ -13,6 +14,8 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     public virtual Location Location { get; private set; } = null!;
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
     private Printer() { }
     public Printer(string name, string model, string manufacturer, string ipAddress, Guid locationId)
     {

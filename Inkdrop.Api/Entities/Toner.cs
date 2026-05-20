@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
 
@@ -10,6 +11,8 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     public int Quantity { get; private set; } = 0;
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
     private Toner() { }
     public Toner(string model, string manufacturer, string color)
     {

@@ -5,6 +5,7 @@ using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
+using Inkdrop.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
@@ -37,7 +38,15 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
             return null;
         }
         context.Movements.Add(movement);
-        await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return null;
+            throw;
+        }
         return new MovementsResponse(movement.Id, movement.TonerId, movement.PrinterId, movement.Quantity, movement.Description, movement.Type, movement.CreatedAt);
     }
 

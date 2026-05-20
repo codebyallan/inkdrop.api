@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
 
@@ -8,6 +9,8 @@ public class Location : Base, ISoftDeletable, IUpdatable
     public string? Description { get; private set; } = null;
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
     private Location() { }
     public Location(string name, string? description = null)
     {

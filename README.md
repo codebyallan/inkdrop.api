@@ -19,6 +19,7 @@ Inkdrop API is not just a CRUD application; it is built to be scalable, secure, 
   - **Locations** $\rightarrow$ **Printers** $\rightarrow$ **Toners**.
   - **Movements**: Full traceability of stock IN/OUT movements.
   - **Low Stock Alerts**: Dedicated endpoints for KPI dashboards.
+  - **Concurrent Access Protection**: High-resilience concurrency control using Row-Level Versioning (Optimistic Concurrency) and Atomic Constraint Handling to prevent race conditions in stock updates.
 - **⚙️ Architectural Highlights**
   - **Notification Pattern**: Business errors are collected in a `NotificationContext` instead of throwing costly exceptions, significantly improving performance.
   - **Soft Delete**: Global query filters ensure that deleted records are ignored across the system while maintaining database integrity.

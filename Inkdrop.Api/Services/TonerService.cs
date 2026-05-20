@@ -5,6 +5,7 @@ using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
+using Inkdrop.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
@@ -21,7 +22,15 @@ public sealed class TonerService(ApplicationDbContext dbContext, NotificationCon
             return null;
         }
         dbContext.Toners.Add(toner);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return null;
+        }
         return new TonerResponse(toner.Id, toner.Model, toner.Manufacturer, toner.Color, toner.Quantity, toner.CreatedAt);
     }
 
@@ -42,7 +51,20 @@ public sealed class TonerService(ApplicationDbContext dbContext, NotificationCon
         if (updateTonerRequest.Manufacturer is not null) toner.UpdateManufacturer(updateTonerRequest.Manufacturer);
         notificationContext.AddNotifications(toner);
         if (!notificationContext.IsValid) return null;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return null;
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return null;
+        }
         return new TonerResponse(toner.Id, toner.Model, toner.Manufacturer, toner.Color, toner.Quantity, toner.CreatedAt);
     }
 

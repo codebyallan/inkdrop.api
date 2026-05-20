@@ -4,6 +4,7 @@ using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Entities;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
+using Inkdrop.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
@@ -22,7 +23,15 @@ public sealed class PrinterService(ApplicationDbContext dbContext, NotificationC
         }
         if (!notificationContext.IsValid) return null;
         dbContext.Printers.Add(printer);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return null;
+        }
         await dbContext.Entry(printer).Reference(p => p.Location).LoadAsync(cancellationToken);
         return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt);
     }
@@ -54,7 +63,20 @@ public sealed class PrinterService(ApplicationDbContext dbContext, NotificationC
             notificationContext.AddNotifications(printer.Notifications);
         }
         if (!notificationContext.IsValid) return null;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return null;
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return null;
+        }
         await dbContext.Entry(printer).Reference(p => p.Location).LoadAsync(cancellationToken);
         return new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt);
     }
