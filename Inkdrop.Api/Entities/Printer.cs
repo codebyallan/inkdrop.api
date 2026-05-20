@@ -15,7 +15,7 @@ public class Printer : Base, ISoftDeletable, IUpdatable
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
-    public byte[] RowVersion { get; set; } = null!;
+    public byte[] RowVersion { get; private set; } = null!;
     private Printer() { }
     public Printer(string name, string model, string manufacturer, string ipAddress, Guid locationId)
     {

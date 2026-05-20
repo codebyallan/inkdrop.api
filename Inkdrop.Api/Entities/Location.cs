@@ -10,7 +10,7 @@ public class Location : Base, ISoftDeletable, IUpdatable
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
-    public byte[] RowVersion { get; set; } = null!;
+    public byte[] RowVersion { get; private set; } = null!;
     private Location() { }
     public Location(string name, string? description = null)
     {

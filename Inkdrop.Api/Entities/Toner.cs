@@ -12,7 +12,7 @@ public class Toner : Base, ISoftDeletable, IUpdatable
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
-    public byte[] RowVersion { get; set; } = null!;
+    public byte[] RowVersion { get; private set; } = null!;
     private Toner() { }
     public Toner(string model, string manufacturer, string color)
     {

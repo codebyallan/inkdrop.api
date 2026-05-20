@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
 
@@ -12,6 +13,8 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
     public bool IsActive { get; private set; } = true;
     public DateTime? UpdatedAt { get; protected set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
+    [Timestamp]
+    public byte[] RowVersion { get; private set; } = null!;
 
     private User() { }
 

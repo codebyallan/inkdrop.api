@@ -14,6 +14,34 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
 {
     public async Task<MovementsResponse?> CreateAsync(CreateMovementRequest request, CancellationToken cancellationToken = default)
     {
+        using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var result = await ExecuteCreateAsync(request, cancellationToken);
+            if (result is null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return null;
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return null;
+            throw;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private async Task<MovementsResponse?> ExecuteCreateAsync(CreateMovementRequest request, CancellationToken cancellationToken)
+    {
         Toner? toner = await context.Toners.FindAsync([request.TonerId], cancellationToken);
         if (toner == null) notificationContext.AddNotification("TonerId", "Not found");
         if (request.Type.Equals("OUT", StringComparison.OrdinalIgnoreCase))
@@ -38,15 +66,7 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
             return null;
         }
         context.Movements.Add(movement);
-        try
-        {
-            await context.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return null;
-            throw;
-        }
+        await context.SaveChangesAsync(cancellationToken);
         return new MovementsResponse(movement.Id, movement.TonerId, movement.PrinterId, movement.Quantity, movement.Description, movement.Type, movement.CreatedAt);
     }
 
