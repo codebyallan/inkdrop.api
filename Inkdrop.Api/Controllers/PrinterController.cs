@@ -18,7 +18,7 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
     [EndpointDescription("Creates a new printer with the provided details and returns the created printer.")]
     [ProducesResponseType(typeof(PrinterResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<PrinterResponse>> CreatePrinter(CreatePrinterRequest request)
+    public async Task<ActionResult<PrinterResponse>> CreatePrinter([FromBody] CreatePrinterRequest request)
     {
         if (request is null)
         {
