@@ -81,7 +81,8 @@ public sealed class LocationController(ILocationService locationService, Notific
     public async Task<IActionResult> DeleteLocation([FromRoute] Guid id)
     {
         bool deleted = await locationService.DeleteLocationAsync(id, HttpContext.RequestAborted);
-        if (!deleted) return NotFound();
+        if (!deleted && notificationContext.IsValid) return NotFound();
+        if (!deleted) return BadRequest();
         return NoContent();
     }
 }

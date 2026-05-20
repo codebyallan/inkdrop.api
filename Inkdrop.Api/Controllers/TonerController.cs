@@ -88,10 +88,11 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<bool>> DeleteToner(Guid id)
+    public async Task<IActionResult> DeleteToner(Guid id)
     {
         bool deleted = await tonerService.DeleteTonerAsync(id, HttpContext.RequestAborted);
         if (!deleted && notificationContext.IsValid) return NotFound();
+        if (!deleted) return BadRequest();
         return NoContent();
     }
 }

@@ -81,6 +81,7 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
     {
         bool deleted = await printerService.DeletePrinterAsync(id, HttpContext.RequestAborted);
         if (!deleted && notificationContext.IsValid) return NotFound();
+        if (!deleted) return BadRequest();
         return NoContent();
     }
 }
