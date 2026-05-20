@@ -29,6 +29,20 @@ public sealed class AuthController(IUserService userService, NotificationContext
         return Ok();
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public IActionResult GetMe()
+    {
+        var user = new
+        {
+            Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
+            Username = User.Identity?.Name,
+            Email = User.FindFirstValue(ClaimTypes.Email),
+            Role = User.FindFirstValue(ClaimTypes.Role)
+        };
+        return Ok(user);
+    }
+
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -60,7 +74,10 @@ public sealed class AuthController(IUserService userService, NotificationContext
             new System.Security.Claims.ClaimsPrincipal(claimsIdentity),
             authProperties);
 
-        return Ok(new { Message = "Logged in successfully" });
+        return Ok(new { 
+            Message = "Logged in successfully", 
+            User = new { user.Id, user.Username, user.Email, user.Role } 
+        });
     }
 
     [HttpPost("logout")]
