@@ -9,10 +9,11 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Technician")]
 public sealed class PrinterController(IPrinterService printerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [EndpointName("CreatePrinter")]
     [EndpointSummary("Create a new printer")]
     [EndpointDescription("Creates a new printer with the provided details and returns the created printer.")]
@@ -53,6 +54,7 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
         return Ok(result.Value);
     }
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     [EndpointName("UpdatePrinter")]
     [EndpointSummary("Update an existing printer")]
     [EndpointDescription("Updates an existing printer with the provided details and returns the updated printer.")]
@@ -72,6 +74,7 @@ public sealed class PrinterController(IPrinterService printerService, Notificati
         return Ok(result.Value);
     }
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     [EndpointName("DeletePrinter")]
     [EndpointSummary("Delete a printer")]
     [EndpointDescription("Deletes a printer with the specified ID.")]

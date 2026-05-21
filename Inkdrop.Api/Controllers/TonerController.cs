@@ -10,10 +10,11 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Technician")]
 public sealed class TonerController(ITonerService tonerService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [EndpointName("CreateToner")]
     [EndpointSummary("Create a new toner")]
     [EndpointDescription("Creates a new toner with the provided details and returns the created toner.")]
@@ -64,6 +65,7 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
         return Ok(toners);
     }
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     [EndpointName("UpdateToner")]
     [EndpointSummary("Update an existing toner")]
     [EndpointDescription("Updates an existing toner with the provided details and returns the updated toner.")]
@@ -83,6 +85,7 @@ public sealed class TonerController(ITonerService tonerService, NotificationCont
         return Ok(result.Value);
     }
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     [EndpointName("DeleteToner")]
     [EndpointSummary("Delete a toner")]
     [EndpointDescription("Deletes a toner with the specified ID.")]

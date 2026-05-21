@@ -10,10 +10,11 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Technician")]
 public sealed class LocationController(ILocationService locationService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [EndpointName("CreateLocation")]
     [EndpointSummary("Create a new location")]
     [EndpointDescription("Creates a new location with the provided details and returns the created location.")]
@@ -54,6 +55,7 @@ public sealed class LocationController(ILocationService locationService, Notific
         return Ok(result.Value);
     }
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     [EndpointName("UpdateLocation")]
     [EndpointSummary("Update an existing location")]
     [EndpointDescription("Updates an existing location with the provided details and returns the updated location.")]
@@ -73,6 +75,7 @@ public sealed class LocationController(ILocationService locationService, Notific
         return Ok(result.Value);
     }
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     [EndpointName("DeleteLocation")]
     [EndpointSummary("Delete a location by ID")]
     [EndpointDescription("Deletes a location with the specified ID.")]
