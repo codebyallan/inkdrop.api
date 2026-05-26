@@ -217,6 +217,33 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
         return ServiceResult<bool>.Success(true);
     }
 
+    public async Task<ServiceResult<bool>> ResetPasswordAsync(Guid id, ResetPasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        User? user = await dbContext.Users.FindAsync([id], cancellationToken);
+        if (user is null) return ServiceResult<bool>.NotFound();
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            notificationContext.AddNotification("PasswordRequired", "New password is required.");
+            return ServiceResult<bool>.Failure();
+        }
+
+        user.ValidatePasswordComplexity(request.NewPassword);
+        if (!user.IsValid)
+        {
+            notificationContext.AddNotifications(user);
+            return ServiceResult<bool>.Failure();
+        }
+
+        byte[] newSaltBytes = RandomNumberGenerator.GetBytes(SaltSize);
+        string newSalt = Convert.ToBase64String(newSaltBytes);
+        string newHash = HashPassword(request.NewPassword, newSaltBytes);
+
+        user.UpdatePassword(newHash, newSalt);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ServiceResult<bool>.Success(true);
+    }
+
     private string HashPassword(string password, byte[] salt)
     {
         byte[] hash = Rfc2898DeriveBytes.Pbkdf2(

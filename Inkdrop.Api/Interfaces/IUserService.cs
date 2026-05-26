@@ -16,4 +16,5 @@ public interface IUserService
     Task<ServiceResult<bool>> ActivateUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ServiceResult<bool>> DeactivateUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ServiceResult<bool>> ChangePasswordAsync(Guid id, ChangePasswordRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<bool>> ResetPasswordAsync(Guid id, ResetPasswordRequest request, CancellationToken cancellationToken = default);
 }
