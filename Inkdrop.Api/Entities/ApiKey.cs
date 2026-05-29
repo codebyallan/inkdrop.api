@@ -41,6 +41,18 @@ public sealed class ApiKey : Base, ISoftDeletable
         IsActive = true;
     }
 
+    public void UpdateName(string name)
+    {
+        name = name?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            AddNotification("ApiKeyNameInvalid", "API Key name cannot be empty.");
+            return;
+        }
+
+        Name = name;
+    }
+
     public void MarkAsDeleted()
     {
         if (DeletedAt != null) return;
