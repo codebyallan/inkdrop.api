@@ -6,8 +6,8 @@ namespace Inkdrop.Api.Interfaces;
 
 public interface IApiKeyService
 {
-    Task<ServiceResult<string>> CreateKeyAsync(CreateApiKeyRequest request);
-    Task<IEnumerable<ApiKeyResponse>> GetActiveKeysAsync();
-    Task<ServiceResult<bool>> UpdateKeyNameAsync(Guid id, UpdateApiKeyRequest request);
-    Task<ServiceResult<bool>> RevokeKeyAsync(Guid id);
+    Task<ServiceResult<string>> CreateKeyAsync(CreateApiKeyRequest request, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ApiKeyResponse>> GetActiveKeysAsync(CancellationToken cancellationToken = default);
+    Task<ServiceResult<bool>> UpdateKeyNameAsync(Guid id, UpdateApiKeyRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<bool>> RevokeKeyAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -13,7 +13,7 @@ namespace Inkdrop.Api.Services;
 
 public sealed class ApiKeyService(ApplicationDbContext dbContext, NotificationContext notificationContext) : IApiKeyService
 {
-    public async Task<ServiceResult<string>> CreateKeyAsync(CreateApiKeyRequest request)
+    public async Task<ServiceResult<string>> CreateKeyAsync(CreateApiKeyRequest request, CancellationToken cancellationToken = default)
     {
         // Generate a secure random key
         var plainKey = GenerateSecureRandomKey();
@@ -28,23 +28,23 @@ public sealed class ApiKeyService(ApplicationDbContext dbContext, NotificationCo
         }
         
         dbContext.ApiKeys.Add(apiKey);
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // Return the plain key only once. It's not stored in the DB.
         return ServiceResult<string>.Success(plainKey);
     }
 
-    public async Task<IEnumerable<ApiKeyResponse>> GetActiveKeysAsync()
+    public async Task<IEnumerable<ApiKeyResponse>> GetActiveKeysAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.ApiKeys
             .Where(a => a.IsActive)
             .Select(a => new ApiKeyResponse(a.Id, a.Name, a.CreatedAt, a.LastUsedAt))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<ServiceResult<bool>> UpdateKeyNameAsync(Guid id, UpdateApiKeyRequest request)
+    public async Task<ServiceResult<bool>> UpdateKeyNameAsync(Guid id, UpdateApiKeyRequest request, CancellationToken cancellationToken = default)
     {
-        var apiKey = await dbContext.ApiKeys.FindAsync([id]);
+        var apiKey = await dbContext.ApiKeys.FindAsync([id], cancellationToken);
         if (apiKey == null) return ServiceResult<bool>.NotFound();
 
         apiKey.UpdateName(request.Name);
@@ -55,17 +55,17 @@ public sealed class ApiKeyService(ApplicationDbContext dbContext, NotificationCo
             return ServiceResult<bool>.Failure();
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
         return ServiceResult<bool>.Success(true);
     }
 
-    public async Task<ServiceResult<bool>> RevokeKeyAsync(Guid id)
+    public async Task<ServiceResult<bool>> RevokeKeyAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var apiKey = await dbContext.ApiKeys.FindAsync([id]);
+        var apiKey = await dbContext.ApiKeys.FindAsync([id], cancellationToken);
         if (apiKey == null) return ServiceResult<bool>.NotFound();
 
         apiKey.Deactivate();
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<bool>.Success(true);
     }

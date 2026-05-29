@@ -26,7 +26,7 @@ public sealed class ApiKeyController(IApiKeyService apiKeyService, NotificationC
             return BadRequest();
         }
 
-        var result = await apiKeyService.CreateKeyAsync(request);
+        var result = await apiKeyService.CreateKeyAsync(request, HttpContext.RequestAborted);
         if (!result.IsSuccess) return BadRequest();
 
         return CreatedAtAction(nameof(GetKeys), result.Value);
@@ -39,7 +39,7 @@ public sealed class ApiKeyController(IApiKeyService apiKeyService, NotificationC
     [ProducesResponseType(typeof(IEnumerable<ApiKeyResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ApiKeyResponse>>> GetKeys()
     {
-        var keys = await apiKeyService.GetActiveKeysAsync();
+        var keys = await apiKeyService.GetActiveKeysAsync(HttpContext.RequestAborted);
         return Ok(keys);
     }
 
@@ -75,7 +75,7 @@ public sealed class ApiKeyController(IApiKeyService apiKeyService, NotificationC
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Revoke(Guid id)
     {
-        var result = await apiKeyService.RevokeKeyAsync(id);
+        var result = await apiKeyService.RevokeKeyAsync(id, HttpContext.RequestAborted);
         if (result.IsNotFound) return NotFound();
         if (!result.IsSuccess) return BadRequest();
 
