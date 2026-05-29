@@ -42,8 +42,7 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
             return AuthenticateResult.NoResult();
         }
 
-        using var scope = this.Context.RequestServices.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var dbContext = this.Context.RequestServices.GetRequiredService<ApplicationDbContext>();
 
         var hashedKey = HashKey(providedApiKey);
         var apiKeyEntity = await dbContext.ApiKeys
