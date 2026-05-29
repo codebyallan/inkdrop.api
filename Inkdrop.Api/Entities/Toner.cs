@@ -9,7 +9,7 @@ public sealed class Toner : Base, ISoftDeletable, IUpdatable
     public string Manufacturer { get; private set; } = string.Empty;
     public string Color { get; init; } = string.Empty;
     public int Quantity { get; private set; } = 0;
-    public DateTime? UpdatedAt { get; protected set; } = null;
+    public DateTime? UpdatedAt { get; private set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
     public byte[] RowVersion { get; private set; } = null!;

@@ -11,8 +11,8 @@ public sealed class Printer : Base, ISoftDeletable, IUpdatable
     public string IpAddress { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
     public Guid LocationId { get; private set; }
-    public virtual Location Location { get; private set; } = null!;
-    public DateTime? UpdatedAt { get; protected set; } = null;
+    public Location Location { get; private set; } = null!;
+    public DateTime? UpdatedAt { get; private set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
     public byte[] RowVersion { get; private set; } = null!;

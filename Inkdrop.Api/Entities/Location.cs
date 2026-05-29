@@ -7,7 +7,7 @@ public sealed class Location : Base, ISoftDeletable, IUpdatable
 {
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; } = null;
-    public DateTime? UpdatedAt { get; protected set; } = null;
+    public DateTime? UpdatedAt { get; private set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
     public byte[] RowVersion { get; private set; } = null!;

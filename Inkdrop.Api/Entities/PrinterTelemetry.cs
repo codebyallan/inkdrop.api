@@ -9,7 +9,7 @@ public sealed class PrinterTelemetry : Base
     public DateTime CollectedAt { get; private set; }
     
     private readonly List<TelemetrySupply> _supplies = new();
-    public virtual IReadOnlyCollection<TelemetrySupply> Supplies => _supplies;
+    public IReadOnlyCollection<TelemetrySupply> Supplies => _supplies;
 
     private PrinterTelemetry() { }
 
