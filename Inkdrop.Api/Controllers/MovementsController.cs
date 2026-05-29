@@ -1,3 +1,4 @@
+using Inkdrop.Api.Core;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Dtos.Responses;
 using Inkdrop.Api.DTOs.Responses;
@@ -26,9 +27,9 @@ public sealed class MovementsController(IMovementsService movementsService, Noti
             notificationContext.AddNotification("RequestError.", "body cannot be empty.");
             return BadRequest();
         }
-        MovementsResponse? movement = await movementsService.CreateAsync(request, HttpContext.RequestAborted);
-        if (movement == null) return BadRequest();
-        return CreatedAtAction(nameof(GetMovementsById), new { id = movement.Id }, movement);
+        var result = await movementsService.CreateAsync(request, HttpContext.RequestAborted);
+        if (!result.IsSuccess) return BadRequest();
+        return CreatedAtAction(nameof(GetMovementsById), new { id = result.Value!.Id }, result.Value);
     }
 
     [HttpGet]
@@ -51,9 +52,10 @@ public sealed class MovementsController(IMovementsService movementsService, Noti
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<MovementsResponse>> GetMovementsById([FromRoute] Guid id)
     {
-        MovementsResponse? movement = await movementsService.GetMovementByIdAsync(id, HttpContext.RequestAborted);
-        if (movement == null) return NotFound();
-        return Ok(movement);
+        var result = await movementsService.GetMovementByIdAsync(id, HttpContext.RequestAborted);
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess) return BadRequest();
+        return Ok(result.Value);
     }
     [HttpGet("printer/{id}")]
     [EndpointName("GetMovementsByPrinterId")]

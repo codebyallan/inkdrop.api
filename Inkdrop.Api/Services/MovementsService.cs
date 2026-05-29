@@ -1,3 +1,4 @@
+using Inkdrop.Api.Core;
 using Inkdrop.Api.Data;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Dtos.Responses;
@@ -12,7 +13,7 @@ namespace Inkdrop.Api.Services;
 
 public sealed class MovementsService(ApplicationDbContext context, NotificationContext notificationContext) : IMovementsService
 {
-    public async Task<MovementsResponse?> CreateAsync(CreateMovementRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<MovementsResponse>> CreateAsync(CreateMovementRequest request, CancellationToken cancellationToken = default)
     {
         using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
@@ -21,16 +22,16 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
             if (result is null)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                return null;
+                return ServiceResult<MovementsResponse>.Failure();
             }
 
             await transaction.CommitAsync(cancellationToken);
-            return result;
+            return ServiceResult<MovementsResponse>.Success(result);
         }
         catch (DbUpdateConcurrencyException ex)
         {
             await transaction.RollbackAsync(cancellationToken);
-            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return null;
+            if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return ServiceResult<MovementsResponse>.Failure();
             throw;
         }
         catch
@@ -73,8 +74,17 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
     public async Task<IEnumerable<MovementsResponse>> GetAllMovementsAsync(CancellationToken cancellationToken = default) => 
         await context.Movements.AsNoTracking().Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync(cancellationToken);
 
-    public async Task<MovementsResponse?> GetMovementByIdAsync(Guid id, CancellationToken cancellationToken = default) => 
-        await context.Movements.AsNoTracking().Where(m => m.Id == id).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).FirstOrDefaultAsync(cancellationToken);
+    public async Task<ServiceResult<MovementsResponse>> GetMovementByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var movement = await context.Movements.AsNoTracking()
+            .Where(m => m.Id == id)
+            .Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return movement == null 
+            ? ServiceResult<MovementsResponse>.NotFound() 
+            : ServiceResult<MovementsResponse>.Success(movement);
+    }
 
     public async Task<IEnumerable<MovementsResponse>> GetMovementsByPrinterIdAsync(Guid printerId, CancellationToken cancellationToken = default) => 
         await context.Movements.AsNoTracking().Where(m => m.PrinterId == printerId).OrderByDescending(m => m.CreatedAt).Select(m => new MovementsResponse(m.Id, m.TonerId, m.PrinterId, m.Quantity, m.Description, m.Type, m.CreatedAt)).ToListAsync(cancellationToken);
