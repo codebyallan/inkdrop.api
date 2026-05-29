@@ -15,6 +15,10 @@ public sealed class UserController(IUserService userService, NotificationContext
 {
     [Authorize(Roles = "Admin")]
     [HttpGet]
+    [EndpointName("GetAllUsers")]
+    [EndpointSummary("Get all users")]
+    [EndpointDescription("Returns a list of all registered users in the system.")]
+    [ProducesResponseType(typeof(IEnumerable<UserResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<UserResponse>>> GetAll()
     {
         var users = await userService.GetAllUsersAsync(HttpContext.RequestAborted);
@@ -23,6 +27,11 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpGet("{id}")]
+    [EndpointName("GetUserById")]
+    [EndpointSummary("Get user by ID")]
+    [EndpointDescription("Returns the details of a specific user identified by their unique ID.")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserResponse>> GetById(Guid id)
     {
         var result = await userService.GetUserByIdAsync(id, HttpContext.RequestAborted);
@@ -32,6 +41,11 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [EndpointName("CreateUser")]
+    [EndpointSummary("Register a new user")]
+    [EndpointDescription("Creates a new user account with the provided credentials and assigns a role.")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UserResponse>> Create([FromBody] RegisterRequest request)
     {
         var result = await userService.CreateUserAsync(request, HttpContext.RequestAborted);
@@ -41,6 +55,12 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
+    [EndpointName("UpdateUser")]
+    [EndpointSummary("Update user profile")]
+    [EndpointDescription("Updates the username, email, or role of an existing user.")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UserResponse>> Update(Guid id, [FromBody] UpdateUserRequest request)
     {
         var result = await userService.UpdateUserAsync(id, request, HttpContext.RequestAborted);
@@ -51,6 +71,12 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
+    [EndpointName("DeleteUser")]
+    [EndpointSummary("Delete a user")]
+    [EndpointDescription("Soft-deletes a user account, preventing further logins.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await userService.DeleteUserAsync(id, HttpContext.RequestAborted);
@@ -61,6 +87,12 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id}/activate")]
+    [EndpointName("ActivateUser")]
+    [EndpointSummary("Activate a user account")]
+    [EndpointDescription("Sets a deactivated user account back to active status.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Activate(Guid id)
     {
         var result = await userService.ActivateUserAsync(id, HttpContext.RequestAborted);
@@ -71,6 +103,12 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id}/deactivate")]
+    [EndpointName("DeactivateUser")]
+    [EndpointSummary("Deactivate a user account")]
+    [EndpointDescription("Disables a user account, preventing any further authentication.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var result = await userService.DeactivateUserAsync(id, HttpContext.RequestAborted);
@@ -80,6 +118,13 @@ public sealed class UserController(IUserService userService, NotificationContext
     }
 
     [HttpPatch("me/password")]
+    [EndpointName("ChangeMyPassword")]
+    [EndpointSummary("Change own password")]
+    [EndpointDescription("Allows an authenticated user to update their own password after verifying the current one.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest request)
     {
         if (request is null)
@@ -103,6 +148,12 @@ public sealed class UserController(IUserService userService, NotificationContext
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id}/password")]
+    [EndpointName("ResetUserPassword")]
+    [EndpointSummary("Reset user password")]
+    [EndpointDescription("Allows an administrator to force a password reset for any user account.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetUserPassword(Guid id, [FromBody] ResetPasswordRequest request)
     {
         if (request is null)
