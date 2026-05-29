@@ -15,30 +15,28 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
 {
     public async Task<ServiceResult<MovementsResponse>> CreateAsync(CreateMovementRequest request, CancellationToken cancellationToken = default)
     {
-        using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        var result = await ExecuteCreateAsync(request, cancellationToken);
+        if (result is null)
+        {
+            return ServiceResult<MovementsResponse>.Failure();
+        }
+
         try
         {
-            var result = await ExecuteCreateAsync(request, cancellationToken);
-            if (result is null)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                return ServiceResult<MovementsResponse>.Failure();
-            }
-
-            await transaction.CommitAsync(cancellationToken);
-            return ServiceResult<MovementsResponse>.Success(result);
+            await context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
             if (DbExceptionHandler.HandleConcurrencyException(ex, notificationContext)) return ServiceResult<MovementsResponse>.Failure();
             throw;
         }
-        catch
+        catch (DbUpdateException ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
+            return ServiceResult<MovementsResponse>.Failure();
         }
+
+        return ServiceResult<MovementsResponse>.Success(result);
     }
 
     private async Task<MovementsResponse?> ExecuteCreateAsync(CreateMovementRequest request, CancellationToken cancellationToken)
