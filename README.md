@@ -12,6 +12,7 @@ Inkdrop API is not just a CRUD application; it is built to be scalable, secure, 
 
 - **🛡️ Advanced Security**
   - **Authentication**: Secure Cookie-based authentication (HttpOnly, Secure, SameSite=None) to support cross-domain SPAs.
+  - **API Key Auth**: Specialized header-based authentication (`X-API-KEY`) for external monitoring agents (Bots).
   - **Authorization**: Role-Based Access Control (RBAC) with `Admin` and `Technician` roles.
   - **CSRF Protection**: Double-Submit Cookie pattern to prevent Cross-Site Request Forgery.
   - **Password Security**: Native PBKDF2 hashing with unique salts for every user and strict complexity requirements (minimum 6 characters, including uppercase, lowercase, number, and special character).
@@ -89,6 +90,8 @@ Edit `appsettings.json` and set your connection string and allowed origins:
 | `POST` | `/api/apikey` | Create API Key for Agents | Admin |
 
 ### 🤖 Bot & Integration (API Key Auth)
+To authenticate requests as a Bot, include the `X-API-KEY` header in your HTTP requests.
+
 | Method | Route | Description | Access |
 |--------|-------|-------------|---------|
 | `GET` | `/api/bot/printers` | List printers for monitoring | ApiKey |
