@@ -65,7 +65,6 @@ public sealed class MovementsService(ApplicationDbContext context, NotificationC
             return null;
         }
         context.Movements.Add(movement);
-        await context.SaveChangesAsync(cancellationToken);
         return new MovementsResponse(movement.Id, movement.TonerId, movement.PrinterId, movement.Quantity, movement.Description, movement.Type, movement.CreatedAt);
     }
 
