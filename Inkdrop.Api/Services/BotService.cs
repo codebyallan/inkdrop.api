@@ -20,7 +20,7 @@ public sealed class BotService(ApplicationDbContext dbContext, NotificationConte
                 p.Id, 
                 p.IpAddress, 
                 p.Model, 
-                dbContext.Locations.Where(l => l.Id == p.LocationId).Select(l => l.Name).FirstOrDefault() ?? "Unknown"
+                p.Location.Name ?? "Unknown"
             ))
             .ToListAsync(cancellationToken);
     }
