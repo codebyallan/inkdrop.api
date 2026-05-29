@@ -114,7 +114,7 @@ public sealed class UserService(ApplicationDbContext dbContext, NotificationCont
     public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Users.AsNoTracking()
-            .Select(u => MapToResponse(u))
+            .Select(u => new UserResponse(u.Id, u.Username, u.Email, u.Role.ToString(), u.IsActive, u.CreatedAt))
             .ToListAsync(cancellationToken);
     }
 
