@@ -11,7 +11,7 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
     public string Salt { get; private set; } = string.Empty;
     public UserRole Role { get; private set; }
     public bool IsActive { get; private set; } = true;
-    public DateTime? UpdatedAt { get; protected set; } = null;
+    public DateTime? UpdatedAt { get; private set; } = null;
     public DateTime? DeletedAt { get; private set; } = null;
     [Timestamp]
     public byte[] RowVersion { get; private set; } = null!;

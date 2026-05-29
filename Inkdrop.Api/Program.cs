@@ -23,6 +23,8 @@ builder.Services.AddScoped<IPrinterService, PrinterService>();
 builder.Services.AddScoped<ITonerService, TonerService>();
 builder.Services.AddScoped<IMovementsService, MovementsService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<NotificationContext>();
 builder.Services.AddCustomCors(builder.Configuration);
 
@@ -49,12 +51,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                 return Task.CompletedTask;
             }
         };
-    });
+    })
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationOptions.SchemeName, options => { });
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("StaffOnly", policy => policy.RequireRole("Admin", "Technician"));
+    options.AddPolicy("BotPolicy", policy => 
+        policy.AddAuthenticationSchemes(CookieAuthenticationDefaults.AuthenticationScheme, ApiKeyAuthenticationOptions.SchemeName)
+              .RequireAuthenticatedUser());
 });
 
 builder.Services.AddAntiforgery(options => 
