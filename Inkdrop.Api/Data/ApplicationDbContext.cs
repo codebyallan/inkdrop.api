@@ -10,6 +10,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Printer> Printers => Set<Printer>();
     public DbSet<Toner> Toners => Set<Toner>();
     public DbSet<Movements> Movements => Set<Movements>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<PrinterTelemetry> PrinterTelemetries => Set<PrinterTelemetry>();
+    public DbSet<TelemetrySupply> TelemetrySupplies => Set<TelemetrySupply>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(user =>
@@ -141,6 +144,45 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasColumnType("timestamp with time zone");
         }
         );
+
+        modelBuilder.Entity<ApiKey>(apiKey =>
+        {
+            apiKey.HasKey(a => a.Id);
+            apiKey.Property(a => a.Name).HasMaxLength(100).IsRequired();
+            apiKey.Property(a => a.KeyHash).IsRequired();
+            apiKey.Property(a => a.CreatedAt).HasColumnType("timestamp with time zone");
+            apiKey.Property(a => a.LastUsedAt).HasColumnType("timestamp with time zone");
+            apiKey.Property(a => a.DeletedAt).HasColumnType("timestamp with time zone");
+            apiKey.HasQueryFilter(a => a.DeletedAt == null);
+            apiKey.HasIndex(a => a.KeyHash).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
+        });
+
+        modelBuilder.Entity<PrinterTelemetry>(telemetry =>
+        {
+            telemetry.HasKey(t => t.Id);
+            telemetry.Property(t => t.PrinterId).IsRequired();
+            telemetry.Property(t => t.TotalPages).IsRequired();
+            telemetry.Property(t => t.CollectedAt).HasColumnType("timestamp with time zone").IsRequired();
+            telemetry.Property(t => t.CreatedAt).HasColumnType("timestamp with time zone");
+            telemetry.HasIndex(t => new { t.PrinterId, t.CollectedAt });
+            telemetry.HasOne<Printer>()
+                .WithMany()
+                .HasForeignKey(t => t.PrinterId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TelemetrySupply>(supply =>
+        {
+            supply.HasKey(s => s.Id);
+            supply.Property(s => s.Color).HasMaxLength(50).IsRequired();
+            supply.Property(s => s.Level).IsRequired();
+            supply.Property(s => s.CreatedAt).HasColumnType("timestamp with time zone");
+            supply.HasOne<PrinterTelemetry>()
+                .WithMany(t => t.Supplies)
+                .HasForeignKey(s => s.TelemetryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
