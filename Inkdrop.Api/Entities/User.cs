@@ -126,6 +126,10 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
             AddNotification("UserEmailInvalid", "Email cannot be null or empty.");
             return;
         }
-        if (!email.Contains("@") || !email.Contains(".")) AddNotification("UserEmailFormatInvalid", "Invalid email format.");
+        try { _ = new System.Net.Mail.MailAddress(email); }
+        catch (FormatException)
+        {
+            AddNotification("UserEmailFormatInvalid", "Invalid email format.");
+        }
     }
 }
