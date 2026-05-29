@@ -18,6 +18,7 @@ Inkdrop API is not just a CRUD application; it is built to be scalable, secure, 
 - **📦 Inventory Management**
   - **Locations** $\rightarrow$ **Printers** $\rightarrow$ **Toners**.
   - **Movements**: Full traceability of stock IN/OUT movements.
+  - **Active Monitoring**: Integration with local agents via SNMP to automate page counters and toner level reporting.
   - **Low Stock Alerts**: Dedicated endpoints for KPI dashboards.
   - **Concurrent Access Protection**: High-resilience concurrency control using Row-Level Versioning (Optimistic Concurrency) and Atomic Constraint Handling to prevent race conditions in stock updates.
 - **⚙️ Architectural Highlights**
@@ -85,6 +86,13 @@ Edit `appsettings.json` and set your connection string and allowed origins:
 | `GET` | `/api/auth/csrf` | Get Anti-Forgery Token | Public |
 | `POST` | `/api/auth/login` | Authenticate & create session | Public |
 | `POST` | `/api/auth/logout` | Terminate session | Authenticated |
+| `POST` | `/api/apikey` | Create API Key for Agents | Admin |
+
+### 🤖 Bot & Integration (API Key Auth)
+| Method | Route | Description | Access |
+|--------|-------|-------------|---------|
+| `GET` | `/api/bot/printers` | List printers for monitoring | ApiKey |
+| `POST`| `/api/bot/telemetry` | Report SNMP telemetry data | ApiKey |
 
 ### 👥 User Management
 | Method | Route | Description | Access |

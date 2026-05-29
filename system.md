@@ -25,6 +25,8 @@ You are a Senior Developer specializing in C# 10/.NET 10, Domain-Driven Design (
 *   **Rich Domain Mapping:** Configure EF Core to read private fields to protect encapsulation, utilizing `.HasField("_variableName")`.
 *   **Soft Delete:** Entities requiring logical deletion must implement the `ISoftDeletable` interface. A global query filter (`HasQueryFilter`) must be configured in the DbContext to ignore deleted records.
 *   **Concurrency Control:** To prevent race conditions (lost updates) in high-concurrency environments, all critical entities must implement **Optimistic Concurrency** using a `[Timestamp]` RowVersion column. The persistence layer must capture `DbUpdateConcurrencyException` and translate it into a business notification for the end user.
+*   **Telemetry and Historical Data:** Entities representing telemetry or logs (e.g., `PrinterTelemetry`) must be treated as immutable after creation. Updates to these records are prohibited to ensure audit integrity.
+*   **API Key Security:** API keys must never be stored in plain text. Only the cryptographic hash of the key must be persisted. Comparison must happen by hashing the incoming key and comparing hashes.
 *   **Performance and Async:** Pure read queries must use `.AsNoTracking()`. All database access must be asynchronous and pass the `CancellationToken`.
 
 ## 5. Dependency Injection (DI) & Infrastructure
