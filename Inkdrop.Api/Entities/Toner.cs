@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
 
-public class Toner : Base, ISoftDeletable, IUpdatable
+public sealed class Toner : Base, ISoftDeletable, IUpdatable
 {
     public string Model { get; private set; } = string.Empty;
     public string Manufacturer { get; private set; } = string.Empty;

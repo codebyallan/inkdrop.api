@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
 
-public class Location : Base, ISoftDeletable, IUpdatable
+public sealed class Location : Base, ISoftDeletable, IUpdatable
 {
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; } = null;

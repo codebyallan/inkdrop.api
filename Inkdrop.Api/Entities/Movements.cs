@@ -1,6 +1,6 @@
 namespace Inkdrop.Api.Entities
 {
-    public class Movements : Base
+    public sealed class Movements : Base
     {
         public Guid TonerId { get; init; }
         public Guid? PrinterId { get; init; }
