@@ -7,7 +7,9 @@ public sealed class PrinterTelemetry : Base
     public Guid PrinterId { get; private set; }
     public int TotalPages { get; private set; }
     public DateTime CollectedAt { get; private set; }
-    public ICollection<TelemetrySupply> Supplies { get; private set; } = new List<TelemetrySupply>();
+    
+    private readonly List<TelemetrySupply> _supplies = new();
+    public virtual IReadOnlyCollection<TelemetrySupply> Supplies => _supplies;
 
     private PrinterTelemetry() { }
 
@@ -36,6 +38,6 @@ public sealed class PrinterTelemetry : Base
             return;
         }
 
-        Supplies.Add(new TelemetrySupply(this, color, level));
+        _supplies.Add(new TelemetrySupply(this, color, level));
     }
 }
