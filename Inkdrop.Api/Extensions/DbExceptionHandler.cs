@@ -41,6 +41,12 @@ public static class DbExceptionHandler
                 notificationContext.AddNotification("TonerAlreadyExists", "A toner with this model, manufacturer and color already exists.");
                 return true;
             }
+
+            if (constraintName.Contains("PrinterTelemetries") && constraintName.Contains("CollectedAt"))
+            {
+                notificationContext.AddNotification("TelemetryDuplicate", "Telemetry data for this printer and timestamp has already been reported.");
+                return true;
+            }
         }
 
         return false;

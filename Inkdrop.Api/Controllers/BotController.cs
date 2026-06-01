@@ -40,7 +40,15 @@ public sealed class BotController(IBotService botService, NotificationContext no
 
         var result = await botService.SaveTelemetryAsync(request, HttpContext.RequestAborted);
         if (result.IsNotFound) return NotFound();
-        if (!result.IsSuccess) return BadRequest();
+        
+        if (!result.IsSuccess)
+        {
+            if (notificationContext.HasNotification("TelemetryDuplicate"))
+            {
+                return Ok(); // Idempotent response: data already exists
+            }
+            return BadRequest();
+        }
 
         return CreatedAtAction(nameof(GetPrinters), null, null);
     }

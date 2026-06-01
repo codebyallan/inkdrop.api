@@ -17,6 +17,7 @@ public sealed class PrinterTelemetry : Base
     {
         if (printerId == Guid.Empty) AddNotification("TelemetryPrinterInvalid", "Printer ID is required.");
         if (totalPages < 0) AddNotification("TelemetryPagesInvalid", "Total pages cannot be negative.");
+        if (collectedAt > DateTime.UtcNow.AddMinutes(5)) AddNotification("TelemetryDateInvalid", "Collected date cannot be in the future.");
 
         if (!IsValid) return;
 

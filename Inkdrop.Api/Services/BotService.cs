@@ -5,6 +5,7 @@ using Inkdrop.Api.Entities;
 using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Core;
 using Inkdrop.Api.Notifications;
+using Inkdrop.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inkdrop.Api.Services;
@@ -34,6 +35,12 @@ public sealed class BotService(ApplicationDbContext dbContext, NotificationConte
             return ServiceResult<bool>.NotFound();
         }
 
+        if (await dbContext.PrinterTelemetries.AnyAsync(t => t.PrinterId == request.PrinterId && t.CollectedAt == request.CollectedAt, cancellationToken))
+        {
+            notificationContext.AddNotification("TelemetryDuplicate", "Telemetry data for this printer and timestamp has already been reported.");
+            return ServiceResult<bool>.Failure();
+        }
+
         var telemetry = new PrinterTelemetry(request.PrinterId, request.TotalPages, request.CollectedAt);
         
         if (!telemetry.IsValid)
@@ -59,9 +66,9 @@ public sealed class BotService(ApplicationDbContext dbContext, NotificationConte
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (Exception)
+        catch (DbUpdateException ex)
         {
-            notificationContext.AddNotification("PersistenceError", "An error occurred while saving telemetry data.");
+            if (!DbExceptionHandler.HandleUniqueConstraintViolation(ex, notificationContext)) throw;
             return ServiceResult<bool>.Failure();
         }
 

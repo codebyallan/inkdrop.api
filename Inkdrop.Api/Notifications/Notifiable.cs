@@ -42,5 +42,6 @@ public abstract class Notifiable
         }
         _notifications.AddRange(notifiable.Notifications);
     }
+    public bool HasNotification(string key) => _notifications.Any(n => n.Key == key);
     public void ClearNotifications() => _notifications.Clear();
 }

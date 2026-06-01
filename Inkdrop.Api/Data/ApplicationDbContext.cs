@@ -164,7 +164,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             telemetry.Property(t => t.TotalPages).IsRequired();
             telemetry.Property(t => t.CollectedAt).HasColumnType("timestamp with time zone").IsRequired();
             telemetry.Property(t => t.CreatedAt).HasColumnType("timestamp with time zone");
-            telemetry.HasIndex(t => new { t.PrinterId, t.CollectedAt });
+            telemetry.HasIndex(t => new { t.PrinterId, t.CollectedAt })
+                .IsUnique();
             telemetry.HasOne<Printer>()
                 .WithMany()
                 .HasForeignKey(t => t.PrinterId)
