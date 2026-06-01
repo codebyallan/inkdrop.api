@@ -4,12 +4,14 @@ using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/bot")]
 [Authorize(Policy = "BotPolicy")]
+[EnableRateLimiting("bot-policy")]
 public sealed class BotController(IBotService botService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpGet("printers")]

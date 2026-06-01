@@ -5,8 +5,11 @@ using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
 using Inkdrop.Api.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.Threading.RateLimiting;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +71,47 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-XSRF-TOKEN";
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    // Policy for Auth endpoints: Strict limit per IP
+    options.AddFixedWindowLimiter("auth-policy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 5;
+        opt.QueueLimit = 0;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+
+    // Policy for Bot endpoints: Limit per API Key
+    options.AddPolicy("bot-policy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Request.Headers["X-API-KEY"].ToString(),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromSeconds(30),
+                QueueLimit = 0
+            }));
+
+    // General policy for authenticated users
+    options.AddFixedWindowLimiter("general-policy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;
+        opt.QueueLimit = 0;
+    });
+
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        
+        var errorResponse = new Inkdrop.Api.DTOs.Responses.ErrorResponse(
+            new[] { new NotificationMessage("RateLimitExceeded", "Too many requests. Please try again later.") });
+
+        await context.HttpContext.Response.WriteAsJsonAsync(errorResponse, token);
+    };
+});
+
 // Global exception handling
 builder.Services.AddExceptionHandler<Inkdrop.Api.Handlers.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -99,6 +143,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

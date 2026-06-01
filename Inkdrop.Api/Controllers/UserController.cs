@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.DTOs.Responses;
 using Inkdrop.Api.Interfaces;
@@ -11,6 +12,7 @@ namespace Inkdrop.Api.Controllers;
 [ApiController]
 [Route("api/user")]
 [Authorize]
+[EnableRateLimiting("general-policy")]
 public sealed class UserController(IUserService userService, NotificationContext notificationContext) : ControllerBase
 {
     [Authorize(Roles = "Admin")]

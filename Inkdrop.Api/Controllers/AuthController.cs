@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using Inkdrop.Api.DTOs.Requests;
 using Inkdrop.Api.Interfaces;
@@ -12,6 +13,7 @@ namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("auth-policy")]
 public sealed class AuthController(IUserService userService, NotificationContext notificationContext, IAntiforgery antiforgery) : ControllerBase
 {
     [HttpGet("csrf")]

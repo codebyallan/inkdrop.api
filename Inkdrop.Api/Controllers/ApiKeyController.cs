@@ -4,12 +4,14 @@ using Inkdrop.Api.Interfaces;
 using Inkdrop.Api.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Inkdrop.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin")]
+[EnableRateLimiting("general-policy")]
 public sealed class ApiKeyController(IApiKeyService apiKeyService, NotificationContext notificationContext) : ControllerBase
 {
     [HttpPost]
