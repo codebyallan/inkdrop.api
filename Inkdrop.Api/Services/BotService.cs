@@ -41,6 +41,20 @@ public sealed class BotService(ApplicationDbContext dbContext, NotificationConte
             return ServiceResult<bool>.Failure();
         }
 
+        // Monotonicity Check: Pages count must not decrease
+        var lastTelemetry = await dbContext.PrinterTelemetries
+            .AsNoTracking()
+            .Where(t => t.PrinterId == request.PrinterId)
+            .OrderByDescending(t => t.CollectedAt)
+            .Select(t => new { t.TotalPages })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (lastTelemetry != null && request.TotalPages < lastTelemetry.TotalPages)
+        {
+            notificationContext.AddNotification("TelemetryPagesRegression", $"Page count regression detected. Current: {request.TotalPages}, Last recorded: {lastTelemetry.TotalPages}.");
+            return ServiceResult<bool>.Failure();
+        }
+
         var telemetry = new PrinterTelemetry(request.PrinterId, request.TotalPages, request.CollectedAt);
         
         if (!telemetry.IsValid)
