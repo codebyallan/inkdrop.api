@@ -35,7 +35,7 @@ public sealed class BotService(ApplicationDbContext dbContext, NotificationConte
             return ServiceResult<bool>.NotFound();
         }
 
-        if (await dbContext.PrinterTelemetries.AnyAsync(t => t.PrinterId == request.PrinterId && t.CollectedAt == request.CollectedAt, cancellationToken))
+        if (await dbContext.PrinterTelemetries.AnyAsync(t => t.PrinterId == request.PrinterId && t.CollectedAt == request.CollectedAt.ToUniversalTime(), cancellationToken))
         {
             notificationContext.AddNotification("TelemetryDuplicate", "Telemetry data for this printer and timestamp has already been reported.");
             return ServiceResult<bool>.Failure();
