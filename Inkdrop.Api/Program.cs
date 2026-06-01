@@ -13,6 +13,13 @@ using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel to prevent Denial of Service (DoS) via large payloads
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    // Global limit: 1MB (sufficient for JSON telemetry and entity management)
+    serverOptions.Limits.MaxRequestBodySize = 1 * 1024 * 1024;
+});
+
 
 // Get the connection string from configuration
 var connectionString = builder.Configuration.GetSection("DbConfig:ConnectionString").Value
