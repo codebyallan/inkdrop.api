@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using Inkdrop.Api.Extensions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
@@ -45,5 +46,7 @@ public sealed class Location : Base, ISoftDeletable, IUpdatable
         }
         if (name.Length > 100 || name.Length < 3)
             AddNotification("LocationNameLengthInvalid", "Location name must be between 3 and 100 characters.");
+        if (!InputValidator.IsSafe(name))
+            AddNotification("LocationNameUnsafe", "Location name contains forbidden characters or patterns.");
     }
 }

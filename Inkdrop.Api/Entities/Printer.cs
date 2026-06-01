@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using Inkdrop.Api.Extensions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
@@ -95,6 +96,7 @@ public sealed class Printer : Base, ISoftDeletable, IUpdatable
             return;
         }
         if (name.Length < 3 || name.Length > 100) AddNotification("PrinterNameLengthInvalid", "Printer name must be between 3 and 100 characters.");
+        if (!InputValidator.IsSafe(name)) AddNotification("PrinterNameUnsafe", "Printer name contains forbidden characters or patterns.");
     }
     private void ValidateModel(string model)
     {
@@ -104,6 +106,7 @@ public sealed class Printer : Base, ISoftDeletable, IUpdatable
             return;
         }
         if (model.Length < 3 || model.Length > 100) AddNotification("PrinterModelLengthInvalid", "Printer model must be between 3 and 100 characters.");
+        if (!InputValidator.IsSafe(model)) AddNotification("PrinterModelUnsafe", "Printer model contains forbidden characters or patterns.");
     }
     private void ValidateManufacturer(string manufacturer)
     {
@@ -113,6 +116,7 @@ public sealed class Printer : Base, ISoftDeletable, IUpdatable
             return;
         }
         if (manufacturer.Length < 2 || manufacturer.Length > 100) AddNotification("PrinterManufacturerLengthInvalid", "Printer manufacturer must be between 2 and 100 characters.");
+        if (!InputValidator.IsSafe(manufacturer)) AddNotification("PrinterManufacturerUnsafe", "Printer manufacturer contains forbidden characters or patterns.");
     }
     private void ValidateIpAddress(string ipAddress)
     {

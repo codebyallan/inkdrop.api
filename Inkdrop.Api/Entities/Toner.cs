@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using Inkdrop.Api.Extensions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
@@ -70,6 +71,7 @@ public sealed class Toner : Base, ISoftDeletable, IUpdatable
             return;
         }
         if (model.Length < 3 || model.Length > 100) AddNotification("TonerModelLengthInvalid", "Toner model must be between 3 and 100 characters.");
+        if (!InputValidator.IsSafe(model)) AddNotification("TonerModelUnsafe", "Toner model contains forbidden characters or patterns.");
     }
     private void ValidateManufacturer(string manufacturer)
     {
@@ -79,6 +81,7 @@ public sealed class Toner : Base, ISoftDeletable, IUpdatable
             return;
         }
         if (manufacturer.Length < 2 || manufacturer.Length > 100) AddNotification("TonerManufacturerLengthInvalid", "Toner manufacturer must be between 2 and 100 characters.");
+        if (!InputValidator.IsSafe(manufacturer)) AddNotification("TonerManufacturerUnsafe", "Toner manufacturer contains forbidden characters or patterns.");
     }
     private void ValidateColor(string color)
     {

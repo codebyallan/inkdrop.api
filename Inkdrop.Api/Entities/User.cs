@@ -1,4 +1,5 @@
 using Inkdrop.Api.Interfaces;
+using Inkdrop.Api.Extensions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Inkdrop.Api.Entities;
@@ -117,6 +118,7 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
             return;
         }
         if (username.Length < 3 || username.Length > 50) AddNotification("UserUsernameLengthInvalid", "Username must be between 3 and 50 characters.");
+        if (!InputValidator.IsSafe(username)) AddNotification("UserUsernameUnsafe", "Username contains forbidden characters or patterns.");
     }
 
     private void ValidateEmail(string email)
@@ -126,6 +128,7 @@ public sealed class User : Base, ISoftDeletable, IUpdatable
             AddNotification("UserEmailInvalid", "Email cannot be null or empty.");
             return;
         }
+        if (!InputValidator.IsSafe(email)) AddNotification("UserEmailUnsafe", "Email contains forbidden characters or patterns.");
         try { _ = new System.Net.Mail.MailAddress(email); }
         catch (FormatException)
         {
