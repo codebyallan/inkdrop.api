@@ -125,6 +125,10 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddControllers(options =>
     options.Filters.Add<NotificationFilter>())
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new StringSanitizerConverter());
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         options.SuppressModelStateInvalidFilter = true;
