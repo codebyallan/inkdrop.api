@@ -37,13 +37,59 @@ public sealed class PrinterService(ApplicationDbContext dbContext, NotificationC
         return ServiceResult<PrinterResponse>.Success(new PrinterResponse(printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt));
     }
 
-    public async Task<IEnumerable<PrinterResponse>> GetAllPrintersAsync(CancellationToken cancellationToken = default) => 
-        await dbContext.Printers.AsNoTracking().Include(p => p.Location).Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.Location.Name, p.CreatedAt)).ToListAsync(cancellationToken);
+    public async Task<IEnumerable<PrinterResponse>> GetAllPrintersAsync(CancellationToken cancellationToken = default) 
+    {
+        var printers = await dbContext.Printers.AsNoTracking()
+            .Include(p => p.Location)
+            .ToListAsync(cancellationToken);
+
+        var telemetryData = await dbContext.PrinterTelemetries
+            .AsNoTracking()
+            .Include(t => t.Supplies)
+            .GroupBy(t => t.PrinterId)
+            .Select(g => g.OrderByDescending(t => t.CollectedAt).FirstOrDefault())
+            .ToListAsync(cancellationToken);
+
+        var telemetryMap = telemetryData.ToDictionary(t => t!.PrinterId, t => t!);
+
+        return printers.Select(p => {
+            var tel = telemetryMap.GetValueOrDefault(p.Id);
+            return new PrinterResponse(
+                p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.Location.Name, p.CreatedAt,
+                tel == null ? null : new PrinterTelemetryResponse(
+                    tel.TotalPages,
+                    tel.CollectedAt > DateTime.UtcNow.AddDays(-1) ? "Online" : "Offline",
+                    tel.Supplies.Select(s => new TonerTelemetryResponse(s.Color, s.Level)).ToList(),
+                    tel.CollectedAt
+                )
+            );
+        });
+    }
 
     public async Task<ServiceResult<PrinterResponse>> GetPrinterByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var printer = await dbContext.Printers.AsNoTracking().Include(p => p.Location).Where(p => p.Id == id).Select(p => new PrinterResponse(p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.Location.Name, p.CreatedAt)).FirstOrDefaultAsync(cancellationToken);
-        return printer is null ? ServiceResult<PrinterResponse>.NotFound() : ServiceResult<PrinterResponse>.Success(printer);
+        var printer = await dbContext.Printers.AsNoTracking()
+            .Include(p => p.Location)
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+        if (printer is null) return ServiceResult<PrinterResponse>.NotFound();
+
+        var tel = await dbContext.PrinterTelemetries
+            .AsNoTracking()
+            .Include(t => t.Supplies)
+            .Where(t => t.PrinterId == id)
+            .OrderByDescending(t => t.CollectedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return ServiceResult<PrinterResponse>.Success(new PrinterResponse(
+            printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt,
+            tel == null ? null : new PrinterTelemetryResponse(
+                tel.TotalPages,
+                tel.CollectedAt > DateTime.UtcNow.AddDays(-1) ? "Online" : "Offline",
+                tel.Supplies.Select(s => new TonerTelemetryResponse(s.Color, s.Level)).ToList(),
+                tel.CollectedAt
+            )
+        ));
     }
 
     public async Task<ServiceResult<PrinterResponse>> UpdatePrinterAsync(Guid id, UpdatePrinterRequest updatePrinterRequest, CancellationToken cancellationToken = default)
