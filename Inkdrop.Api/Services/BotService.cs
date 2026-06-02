@@ -46,16 +46,29 @@ public sealed class BotService(ApplicationDbContext dbContext, NotificationConte
             .AsNoTracking()
             .Where(t => t.PrinterId == request.PrinterId)
             .OrderByDescending(t => t.CollectedAt)
-            .Select(t => new { t.TotalPages })
+            .Select(t => new { t.TotalPages, t.MonoPages, t.ColorPages })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (lastTelemetry != null && request.TotalPages < lastTelemetry.TotalPages)
+        if (lastTelemetry != null)
         {
-            notificationContext.AddNotification("TelemetryPagesRegression", $"Page count regression detected. Current: {request.TotalPages}, Last recorded: {lastTelemetry.TotalPages}.");
-            return ServiceResult<bool>.Failure();
+            if (request.TotalPages < lastTelemetry.TotalPages)
+            {
+                notificationContext.AddNotification("TelemetryPagesRegression", $"Page count regression detected. Current: {request.TotalPages}, Last recorded: {lastTelemetry.TotalPages}.");
+                return ServiceResult<bool>.Failure();
+            }
+            if (request.MonoPages.HasValue && lastTelemetry.MonoPages.HasValue && request.MonoPages < lastTelemetry.MonoPages)
+            {
+                notificationContext.AddNotification("TelemetryMonoPagesRegression", $"Mono page count regression detected. Current: {request.MonoPages}, Last recorded: {lastTelemetry.MonoPages}.");
+                return ServiceResult<bool>.Failure();
+            }
+            if (request.ColorPages.HasValue && lastTelemetry.ColorPages.HasValue && request.ColorPages < lastTelemetry.ColorPages)
+            {
+                notificationContext.AddNotification("TelemetryColorPagesRegression", $"Color page count regression detected. Current: {request.ColorPages}, Last recorded: {lastTelemetry.ColorPages}.");
+                return ServiceResult<bool>.Failure();
+            }
         }
 
-        var telemetry = new PrinterTelemetry(request.PrinterId, request.TotalPages, request.CollectedAt);
+        var telemetry = new PrinterTelemetry(request.PrinterId, request.TotalPages, request.MonoPages, request.ColorPages, request.CollectedAt.ToUniversalTime());
         
         if (!telemetry.IsValid)
         {

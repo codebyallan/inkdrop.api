@@ -58,6 +58,8 @@ public sealed class PrinterService(ApplicationDbContext dbContext, NotificationC
                 p.Id, p.Name, p.Model, p.Manufacturer, p.IpAddress, p.IsActive, p.LocationId, p.Location.Name, p.CreatedAt,
                 tel == null ? null : new PrinterTelemetryResponse(
                     tel.TotalPages,
+                    tel.MonoPages,
+                    tel.ColorPages,
                     tel.CollectedAt > DateTime.UtcNow.AddDays(-1) ? "Online" : "Offline",
                     tel.Supplies.Select(s => new TonerTelemetryResponse(s.Color, s.Level)).ToList(),
                     tel.CollectedAt
@@ -85,6 +87,8 @@ public sealed class PrinterService(ApplicationDbContext dbContext, NotificationC
             printer.Id, printer.Name, printer.Model, printer.Manufacturer, printer.IpAddress, printer.IsActive, printer.LocationId, printer.Location.Name, printer.CreatedAt,
             tel == null ? null : new PrinterTelemetryResponse(
                 tel.TotalPages,
+                tel.MonoPages,
+                tel.ColorPages,
                 tel.CollectedAt > DateTime.UtcNow.AddDays(-1) ? "Online" : "Offline",
                 tel.Supplies.Select(s => new TonerTelemetryResponse(s.Color, s.Level)).ToList(),
                 tel.CollectedAt

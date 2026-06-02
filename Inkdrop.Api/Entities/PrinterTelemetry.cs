@@ -6,6 +6,8 @@ public sealed class PrinterTelemetry : Base
 {
     public Guid PrinterId { get; private set; }
     public int TotalPages { get; private set; }
+    public int? MonoPages { get; private set; }
+    public int? ColorPages { get; private set; }
     public DateTime CollectedAt { get; private set; }
     
     private readonly List<TelemetrySupply> _supplies = new();
@@ -13,10 +15,12 @@ public sealed class PrinterTelemetry : Base
 
     private PrinterTelemetry() { }
 
-    public PrinterTelemetry(Guid printerId, int totalPages, DateTime collectedAt)
+    public PrinterTelemetry(Guid printerId, int totalPages, int? monoPages, int? colorPages, DateTime collectedAt)
     {
         if (printerId == Guid.Empty) AddNotification("TelemetryPrinterInvalid", "Printer ID is required.");
         if (totalPages < 0) AddNotification("TelemetryPagesInvalid", "Total pages cannot be negative.");
+        if (monoPages < 0) AddNotification("TelemetryMonoPagesInvalid", "Mono pages cannot be negative.");
+        if (colorPages < 0) AddNotification("TelemetryColorPagesInvalid", "Color pages cannot be negative.");
         
         // Validate CollectedAt: No MinValue, no dates older than 30 days, no future dates (5 min tolerance)
         if (collectedAt == default || collectedAt == DateTime.MinValue) 
@@ -30,6 +34,8 @@ public sealed class PrinterTelemetry : Base
 
         PrinterId = printerId;
         TotalPages = totalPages;
+        MonoPages = monoPages;
+        ColorPages = colorPages;
         CollectedAt = collectedAt;
     }
 
