@@ -35,6 +35,7 @@ builder.Services.AddScoped<IMovementsService, MovementsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<IBotService, BotService>();
+builder.Services.AddScoped<IReportsService, ReportsService>();
 builder.Services.AddScoped<NotificationContext>();
 builder.Services.AddCustomCors(builder.Configuration);
 
@@ -105,6 +106,14 @@ builder.Services.AddRateLimiter(options =>
     {
         opt.Window = TimeSpan.FromMinutes(1);
         opt.PermitLimit = 100;
+        opt.QueueLimit = 0;
+    });
+
+    // Policy for heavy reporting endpoints
+    options.AddFixedWindowLimiter("reports-policy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 20;
         opt.QueueLimit = 0;
     });
 

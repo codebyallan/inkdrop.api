@@ -22,6 +22,7 @@ Inkdrop API is not just a CRUD application; it is built to be scalable, secure, 
   - **Active Monitoring**: Integration with local agents via SNMP to automate page counters and toner level reporting.
   - **Low Stock Alerts**: Dedicated endpoints for KPI dashboards.
   - **Concurrent Access Protection**: High-resilience concurrency control using Row-Level Versioning (Optimistic Concurrency) and Atomic Constraint Handling to prevent race conditions in stock updates.
+  - **BI & Analytics**: Advanced reporting engine for time-series analysis of page volumes and toner consumption, featuring predictive analysis for supply depletion.
 - **⚙️ Architectural Highlights**
   - **Notification Pattern**: Business errors are collected in a `NotificationContext` instead of throwing costly exceptions, significantly improving performance.
   - **Soft Delete**: Global query filters ensure that deleted records are ignored across the system while maintaining database integrity.
@@ -114,6 +115,13 @@ To authenticate requests as a Bot, include the `X-API-KEY` header in your HTTP r
 |--------|-------|-------------|---------|
 | `POST` | `/api/movements` | Record stock IN or OUT | Admin, Technician |
 | `GET` | `/api/movements` | List all movements | Admin, Technician |
+
+### 📊 BI & Reports
+| Method | Route | Description | Access |
+|--------|-------|-------------|---------|
+| `GET` | `/api/reports/pages/volume` | Page volume time-series | User |
+| `GET` | `/api/reports/toner/consumption` | Toner drop time-series | User |
+| `GET` | `/api/reports/predictions` | Depletion predictions (AI) | User |
 
 ### 🩺 System Health
 | Method | Route | Description | Access |
